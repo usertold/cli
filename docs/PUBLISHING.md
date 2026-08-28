@@ -14,7 +14,7 @@ Before the first 2.x release, a package owner must replace the existing trusted 
 
 Then configure the protected GitHub environment named `npm` to allow only tags matching `v*`. The workflow runs from a release tag, not from the `main` branch ref.
 
-After the first trusted-publishing proof succeeds, set npm publishing access to **Require two-factor authentication and disallow tokens**, then revoke obsolete automation/write tokens. Trusted OIDC publishing continues to work without those tokens.
+Set npm publishing access to **Require two-factor authentication and disallow bypass 2FA tokens**, then revoke obsolete automation/write tokens. Trusted OIDC publishing continues to work without those tokens.
 
 This account-level npm change is intentionally not automated by repository code.
 

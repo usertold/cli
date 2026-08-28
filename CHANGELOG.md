@@ -3,14 +3,19 @@
 The complete pre-open-source 1.x package history is preserved in
 [`docs/RELEASE_NOTES_1X.md`](docs/RELEASE_NOTES_1X.md).
 
-## 2.0.0 — Unreleased
+## 2.0.0 — 2026-08-28
 
-- Moved the public `usertold` npm package to its own open-source repository.
+### A public, reviewable CLI
+
+- Moved the `usertold` npm package into a dedicated public repository so its source, shipped files, build checks, and path to the npm registry can be inspected independently from the private UserTold service.
 - Licensed the client under Apache-2.0 and added explicit trademark and third-party notices.
-- Reduced the package to supported customer workflows; private extraction, raw API, admin, forensic, forced-termination, and operator repair commands are no longer shipped.
+- Defined a continuously verified package boundary: only supported customer workflows, documentation, and license files ship. Private extraction, raw API, administration, forensics, forced termination, and operator repair commands stay out of the package.
+- Added a human-gated release chain. CI accepts only a verified signed tag on the exact reviewed `main` commit, builds and verifies one tarball, and can only submit it to npm staging with a short-lived trusted-publishing credential. A human maintainer must inspect and approve the staged package with npm 2FA before it becomes public.
+
+### Complete customer workspace management
+
 - Added complete customer workspace management for organizations, participants, invitations, documented Project settings, and GitHub/Linear delivery configuration.
 - Added `auth browser-session` for short-lived Playwright, cookie, environment, or JWT browser credentials.
 - Kept project configuration explicit: `settings` exposes only allowlisted product settings, and `knowledge` owns the typed knowledge HTTP action.
-- Added public-boundary and npm-tarball verification gates plus npm trusted-publishing workflow preparation.
 
 This is a major release because commands visible in the 1.x help surface were removed.
