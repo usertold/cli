@@ -99,4 +99,4 @@ jobs:
           TARBALL: ${{ needs.build.outputs.tarball }}
         run: |
           test -f "release/$TARBALL"
-          npm stage publish "release/$TARBALL"
+          npm stage publish "./release/$TARBALL"
