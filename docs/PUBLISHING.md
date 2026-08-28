@@ -30,6 +30,8 @@ This account-level npm change is intentionally not automated by repository code.
 8. Approve it with `npm stage approve <stage-id>` and complete npm 2FA.
 9. Verify `npm view usertold version dist-tags repository dist.integrity --json` and install the exact version in a clean temporary directory.
 
+If the stage job fails after the build artifact was verified and uploaded, do not move or recreate the signed tag. Run `Publish npm package` manually with the failed release run ID, its exact release SHA and package version, and the SHA-256 printed by the successful build job. The recovery job requires that the source was a release run with one successful `build` job, downloads its immutable artifact, verifies the checksum and package metadata without executing package code, and submits that exact tarball through the same environment-scoped trusted publisher.
+
 The release workflow refuses:
 
 - prereleases;
