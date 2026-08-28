@@ -93,7 +93,7 @@ jobs:
         run: |
           NPM_VERSION="$(npm --version)"
           export NPM_VERSION
-          node -e 'const [major, minor] = process.env.NPM_VERSION.split(".").map(Number); if (major < 11 || (major === 11 && minor < 5)) process.exit(1)'
+          node -e 'const [major, minor] = process.env.NPM_VERSION.split(".").map(Number); if (major < 11 || (major === 11 && minor < 15)) process.exit(1)'
       - name: Stage package for human 2FA approval
         env:
           TARBALL: ${{ needs.build.outputs.tarball }}
