@@ -12,6 +12,9 @@ import { handleStudyCommand } from './commands/study';
 import { handleBillingCommand } from './commands/billing';
 import { handleDataExportCommand } from './commands/data-export';
 import { handleKnowledgeCommand } from './commands/config';
+import { handleOrganizationCommand } from './commands/organization';
+import { handleSettingsCommand } from './commands/settings';
+import { handleIntegrationCommand } from './commands/integration';
 import { handleInitCommand } from './commands/init';
 import { buildHelpPayload, findCommand, findCommandLeaf, renderCommandHelp, renderRootHelp, validateCommandInput, validateDryRunInput } from './commands/help-manifest';
 import { handleCompletionsCommand } from './commands/completions';
@@ -222,6 +225,24 @@ async function dispatch(command: string, argv: string[]): Promise<void> {
       const [subcommand, ...rest] = argv;
       const parsed = parseArgs(rest);
       await handleKnowledgeCommand(subcommand, parsed);
+      return;
+    }
+
+    case 'organization': {
+      const [subcommand, ...rest] = argv;
+      await handleOrganizationCommand(subcommand, parseArgs(rest));
+      return;
+    }
+
+    case 'settings': {
+      const [subcommand, ...rest] = argv;
+      await handleSettingsCommand(subcommand, parseArgs(rest));
+      return;
+    }
+
+    case 'integration': {
+      const [subcommand, ...rest] = argv;
+      await handleIntegrationCommand(subcommand, parseArgs(rest));
       return;
     }
 

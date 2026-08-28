@@ -8,6 +8,7 @@ import { isJsonOutput } from '../lib/output';
 import { handleLogin } from './login';
 import { handleLogout } from './logout';
 import { handleTermsCommand } from './terms';
+import { handleBrowserSession } from './browser-session';
 import { printCommandHelp } from './help-manifest';
 
 export async function handleAuthCommand(subcommand: string | undefined, parsed: ParsedArgs): Promise<void> {
@@ -31,6 +32,9 @@ export async function handleAuthCommand(subcommand: string | undefined, parsed: 
       return;
     case 'terms':
       await handleTermsCommand(parsed);
+      return;
+    case 'browser-session':
+      await handleBrowserSession(parsed);
       return;
     default:
       fail(`Unknown auth command: ${subcommand}`);

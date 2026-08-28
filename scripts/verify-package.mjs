@@ -14,6 +14,9 @@ try {
   const required = [
     'package/package.json',
     'package/README.md',
+    'package/CHANGELOG.md',
+    'package/docs/COMMAND_SURFACE.md',
+    'package/docs/RELEASE_NOTES_1X.md',
     'package/LICENSE',
     'package/NOTICE',
     'package/TRADEMARKS.md',

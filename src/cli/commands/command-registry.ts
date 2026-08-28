@@ -98,6 +98,23 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
         ],
         "operation": "write",
         "auth": "required"
+      },
+      "browser-session": {
+        "summary": "Mint short-lived browser credentials for Playwright or shell automation.",
+        "positionals": [],
+        "options": [
+          { "name": "format", "type": "enum", "values": ["storage", "env", "cookie", "jwt"], "description": "Credential format: Playwright storage state, environment assignment, cookie, or raw JWT." },
+          "token",
+          { "name": "base-url", "description": "Override the UserTold app origin." },
+          "output"
+        ],
+        "requiredOptions": [],
+        "examples": [
+          "usertold auth browser-session --output storage-state.json",
+          "usertold auth browser-session --format env"
+        ],
+        "operation": "write",
+        "auth": "required"
       }
     }
   },
@@ -1880,6 +1897,204 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
         ],
         "operation": "read",
         "auth": "none"
+      }
+    }
+  },
+  "organization": {
+    "kind": "group",
+    "summary": "Create and fully manage UserTold organizations (workspaces).",
+    "subcommands": {
+      "list": {
+        "summary": "List organizations available to the current user.", "positionals": [], "options": [], "requiredOptions": [],
+        "examples": ["usertold organization list --json"], "operation": "read", "auth": "required"
+      },
+      "create": {
+        "summary": "Create an organization.", "positionals": [], "options": ["name", "handle"], "requiredOptions": ["name", "handle"],
+        "examples": ["usertold organization create --name \"Acme\" --handle acme"], "operation": "write", "auth": "required"
+      },
+      "participants": {
+        "summary": "List organization participants and their project access.",
+        "positionals": [{ "name": "orgHandle", "required": true, "description": "Organization handle." }],
+        "options": [], "requiredOptions": [], "examples": ["usertold organization participants acme --json"], "operation": "read", "auth": "required"
+      },
+      "update-participant": {
+        "summary": "Update a participant role and project access.",
+        "positionals": [
+          { "name": "orgHandle", "required": true, "description": "Organization handle." },
+          { "name": "userId", "required": true, "description": "Participant user ID." }
+        ],
+        "options": ["role", "access", "projects"], "requiredOptions": ["role"],
+        "examples": ["usertold organization update-participant acme 42 --role member --access selected --projects prj_one,prj_two"],
+        "operation": "write", "auth": "required"
+      },
+      "remove-participant": {
+        "summary": "Remove a participant from an organization.",
+        "positionals": [
+          { "name": "orgHandle", "required": true, "description": "Organization handle." },
+          { "name": "userId", "required": true, "description": "Participant user ID." }
+        ],
+        "options": [], "requiredOptions": [], "examples": ["usertold organization remove-participant acme 42"],
+        "operation": "delete", "auth": "required", "destructive": true
+      },
+      "invitations": {
+        "summary": "List pending organization invitations.",
+        "positionals": [{ "name": "orgHandle", "required": true, "description": "Organization handle." }],
+        "options": [], "requiredOptions": [], "examples": ["usertold organization invitations acme --json"], "operation": "read", "auth": "required"
+      },
+      "invite": {
+        "summary": "Invite a person with a role and project access.",
+        "positionals": [{ "name": "orgHandle", "required": true, "description": "Organization handle." }],
+        "options": ["email", "role", "access", "projects"], "requiredOptions": ["email", "role"],
+        "examples": ["usertold organization invite acme --email teammate@example.com --role member --access all"],
+        "operation": "write", "auth": "required"
+      },
+      "share-project": {
+        "summary": "Invite a person to one project.",
+        "positionals": [{ "name": "projectRef", "required": true, "description": "Canonical org/project ref." }],
+        "options": ["email"], "requiredOptions": ["email"],
+        "examples": ["usertold organization share-project acme/checkout --email teammate@example.com"],
+        "operation": "write", "auth": "required"
+      },
+      "resend-invitation": {
+        "summary": "Resend an organization invitation.",
+        "positionals": [
+          { "name": "orgHandle", "required": true, "description": "Organization handle." },
+          { "name": "invitationId", "required": true, "description": "Invitation ID." }
+        ],
+        "options": [], "requiredOptions": [], "examples": ["usertold organization resend-invitation acme inv_123"],
+        "operation": "write", "auth": "required"
+      },
+      "revoke-invitation": {
+        "summary": "Revoke an organization invitation.",
+        "positionals": [
+          { "name": "orgHandle", "required": true, "description": "Organization handle." },
+          { "name": "invitationId", "required": true, "description": "Invitation ID." }
+        ],
+        "options": [], "requiredOptions": [], "examples": ["usertold organization revoke-invitation acme inv_123"],
+        "operation": "delete", "auth": "required", "destructive": true
+      },
+      "inspect-invitation": {
+        "summary": "Inspect an invitation token before signing in.", "positionals": [], "options": ["token"], "requiredOptions": ["token"],
+        "examples": ["usertold organization inspect-invitation --token TOKEN --json"], "operation": "read", "auth": "none"
+      },
+      "accept-invitation": {
+        "summary": "Accept an invitation into an organization.",
+        "positionals": [{ "name": "orgHandle", "required": true, "description": "Organization handle from the invitation." }],
+        "options": ["token"], "requiredOptions": ["token"],
+        "examples": ["usertold organization accept-invitation acme --token TOKEN"], "operation": "write", "auth": "required"
+      }
+    }
+  },
+  "settings": {
+    "kind": "group",
+    "summary": "Manage documented project settings without exposing arbitrary configuration.",
+    "subcommands": {
+      "show": {
+        "summary": "Show masked project settings.",
+        "positionals": [{ "name": "projectRef", "required": false, "description": "Canonical org/project ref; defaults to the selected project." }],
+        "options": [], "requiredOptions": [], "examples": ["usertold settings show acme/checkout --json"], "operation": "read", "auth": "required"
+      },
+      "set": {
+        "summary": "Set a documented project setting.",
+        "positionals": [{ "name": "projectRef", "required": false, "description": "Canonical org/project ref; defaults to the selected project." }],
+        "options": [{ "name": "key", "type": "enum", "values": ["openai_api_key", "retention_days"], "description": "Documented project setting." }, "value"],
+        "requiredOptions": ["key", "value"],
+        "examples": ["usertold settings set acme/checkout --key retention_days --value 90"], "operation": "write", "auth": "required"
+      },
+      "delete": {
+        "summary": "Remove a documented project setting.",
+        "positionals": [{ "name": "projectRef", "required": false, "description": "Canonical org/project ref; defaults to the selected project." }],
+        "options": [{ "name": "key", "type": "enum", "values": ["openai_api_key", "retention_days"], "description": "Documented project setting." }],
+        "requiredOptions": ["key"], "examples": ["usertold settings delete acme/checkout --key openai_api_key"],
+        "operation": "delete", "auth": "required", "destructive": true
+      },
+      "validate": {
+        "summary": "Validate a setting value before saving it.",
+        "positionals": [{ "name": "projectRef", "required": false, "description": "Canonical org/project ref; defaults to the selected project." }],
+        "options": [{ "name": "key", "type": "enum", "values": ["openai_api_key", "retention_days"], "description": "Documented project setting." }, "value"],
+        "requiredOptions": ["key", "value"],
+        "examples": ["usertold settings validate acme/checkout --key retention_days --value 90"], "operation": "write", "auth": "required"
+      },
+      "key-health": {
+        "summary": "Check the configured OpenAI key health.",
+        "positionals": [{ "name": "projectRef", "required": false, "description": "Canonical org/project ref; defaults to the selected project." }],
+        "options": [], "requiredOptions": [], "examples": ["usertold settings key-health acme/checkout --json"], "operation": "read", "auth": "required"
+      }
+    }
+  },
+  "integration": {
+    "kind": "group",
+    "summary": "Connect and configure GitHub and Linear delivery integrations.",
+    "subcommands": {
+      "github-install-url": {
+        "summary": "Print the authenticated-browser URL for installing the GitHub App.",
+        "positionals": [{ "name": "projectRef", "required": false, "description": "Canonical org/project ref; defaults to the selected project." }],
+        "options": [], "requiredOptions": [], "examples": ["usertold integration github-install-url acme/checkout"], "operation": "read", "auth": "required"
+      },
+      "github-installations": {
+        "summary": "List GitHub App installations available to a project.",
+        "positionals": [{ "name": "projectRef", "required": false, "description": "Canonical org/project ref; defaults to the selected project." }],
+        "options": [], "requiredOptions": [], "examples": ["usertold integration github-installations acme/checkout --json"], "operation": "read", "auth": "required"
+      },
+      "github-repositories": {
+        "summary": "List repositories available through the selected GitHub installation.",
+        "positionals": [{ "name": "projectRef", "required": false, "description": "Canonical org/project ref; defaults to the selected project." }],
+        "options": [], "requiredOptions": [], "examples": ["usertold integration github-repositories acme/checkout --json"], "operation": "read", "auth": "required"
+      },
+      "github-select-installation": {
+        "summary": "Select a GitHub App installation for a project.",
+        "positionals": [{ "name": "projectRef", "required": false, "description": "Canonical org/project ref; defaults to the selected project." }],
+        "options": ["installation-id"], "requiredOptions": ["installation-id"],
+        "examples": ["usertold integration github-select-installation acme/checkout --installation-id 123"], "operation": "write", "auth": "required"
+      },
+      "github-select-repository": {
+        "summary": "Select the GitHub repository that receives work.",
+        "positionals": [{ "name": "projectRef", "required": false, "description": "Canonical org/project ref; defaults to the selected project." }],
+        "options": ["repo", "branch"], "requiredOptions": ["repo"],
+        "examples": ["usertold integration github-select-repository acme/checkout --repo https://github.com/acme/app --branch main"], "operation": "write", "auth": "required"
+      },
+      "github-verify": {
+        "summary": "Verify the selected GitHub integration.",
+        "positionals": [{ "name": "projectRef", "required": false, "description": "Canonical org/project ref; defaults to the selected project." }],
+        "options": [], "requiredOptions": [], "examples": ["usertold integration github-verify acme/checkout"], "operation": "write", "auth": "required"
+      },
+      "github-diagnostics": {
+        "summary": "Show project-scoped GitHub integration diagnostics.",
+        "positionals": [{ "name": "projectRef", "required": false, "description": "Canonical org/project ref; defaults to the selected project." }],
+        "options": [], "requiredOptions": [], "examples": ["usertold integration github-diagnostics acme/checkout --json"], "operation": "read", "auth": "required"
+      },
+      "github-disconnect": {
+        "summary": "Disconnect GitHub delivery from a project.",
+        "positionals": [{ "name": "projectRef", "required": false, "description": "Canonical org/project ref; defaults to the selected project." }],
+        "options": [], "requiredOptions": [], "examples": ["usertold integration github-disconnect acme/checkout"],
+        "operation": "delete", "auth": "required", "destructive": true
+      },
+      "linear-connect-url": {
+        "summary": "Print the authenticated-browser URL for connecting Linear.",
+        "positionals": [{ "name": "orgHandle", "required": true, "description": "Organization handle." }],
+        "options": ["return-to"], "requiredOptions": [], "examples": ["usertold integration linear-connect-url acme"], "operation": "read", "auth": "required"
+      },
+      "linear-status": {
+        "summary": "Show an organization's Linear connection status.",
+        "positionals": [{ "name": "orgHandle", "required": true, "description": "Organization handle." }],
+        "options": [], "requiredOptions": [], "examples": ["usertold integration linear-status acme --json"], "operation": "read", "auth": "required"
+      },
+      "linear-teams": {
+        "summary": "List Linear teams available to a project.",
+        "positionals": [{ "name": "projectRef", "required": false, "description": "Canonical org/project ref; defaults to the selected project." }],
+        "options": [], "requiredOptions": [], "examples": ["usertold integration linear-teams acme/checkout --json"], "operation": "read", "auth": "required"
+      },
+      "linear-select-team": {
+        "summary": "Select the Linear team that receives work.",
+        "positionals": [{ "name": "projectRef", "required": false, "description": "Canonical org/project ref; defaults to the selected project." }],
+        "options": ["team-id"], "requiredOptions": ["team-id"],
+        "examples": ["usertold integration linear-select-team acme/checkout --team-id TEAM_ID"], "operation": "write", "auth": "required"
+      },
+      "linear-disconnect": {
+        "summary": "Disconnect Linear from an organization.",
+        "positionals": [{ "name": "orgHandle", "required": true, "description": "Organization handle." }],
+        "options": [], "requiredOptions": [], "examples": ["usertold integration linear-disconnect acme"],
+        "operation": "delete", "auth": "required", "destructive": true
       }
     }
   },

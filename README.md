@@ -16,7 +16,8 @@ Node.js 20 or newer is required.
 ## Start
 
 ```bash
-# See the projects available to you
+# See and manage the workspaces available to you
+usertold organization list
 usertold project list
 
 # Select a default project for later commands
@@ -44,20 +45,24 @@ Use `--json` for machine-readable command output and `--dry-run` to inspect supp
 
 | Group | Purpose |
 | --- | --- |
-| `auth` | Sign in, sign out, and inspect the active identity |
+| `auth` | Sign in, inspect identity, and mint short-lived browser credentials |
+| `organization` | Create workspaces and manage participants, roles, access, and invitations |
 | `project` | Create, select, inspect, and install a Project |
 | `study` | Create and manage interview Studies and their scripts |
 | `intake` | Configure participant qualification and review responses |
 | `interview` | Import, inspect, download, and safely reprocess Interviews |
 | `evidence` | Review and curate source-linked Evidence |
 | `work` | Prioritize Evidence-backed Work and push reviewed work to delivery |
+| `settings` | Read, validate, set, and remove documented Project settings |
 | `knowledge` | Configure and test the typed project knowledge HTTP action |
+| `integration` | Install, inspect, configure, verify, and disconnect GitHub or Linear delivery |
 | `billing` | Read usage and billing status |
 | `export` | Request and download your account data export |
 | `init` | Bootstrap a Project and Study |
 | `completions` | Generate shell completions |
 
-The installed version's `usertold --help` is authoritative.
+The installed version's `usertold --help` is authoritative. See
+[MCP and CLI command coverage](docs/COMMAND_SURFACE.md) for the exact vocabulary mapping and customer/operator boundary.
 
 ## Deliberate boundary
 
@@ -69,7 +74,9 @@ The UserTold service, dashboard, interview runtime, evidence extraction, priorit
 
 Production is the default. `--env stage` and `--env local` are intended for UserTold development and explicitly configured environments. Credentials and the selected Project are stored per environment in the user's configuration directory; the CLI never writes them into a repository.
 
-For product secrets, the public CLI exposes only supported typed workflows such as `knowledge apply`. Arbitrary settings mutation is intentionally absent.
+Project configuration is typed and allowlisted: `settings` currently manages only `openai_api_key` and `retention_days`, while `knowledge` owns the Project knowledge action. Arbitrary configuration mutation is intentionally absent.
+
+`usertold auth browser-session` exchanges a durable CLI OAuth login for short-lived browser credentials. Its default output is a Playwright `storageState` document; `--format env`, `cookie`, and `jwt` support other automation clients. Use `--output` to write credentials with mode `0600`.
 
 ## Development
 

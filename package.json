@@ -18,6 +18,9 @@
   "files": [
     "dist/usertold.js",
     "README.md",
+    "CHANGELOG.md",
+    "docs/COMMAND_SURFACE.md",
+    "docs/RELEASE_NOTES_1X.md",
     "LICENSE",
     "NOTICE",
     "TRADEMARKS.md",

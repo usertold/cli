@@ -74,12 +74,14 @@ export type CliPositional = {
 type OptionMetadata = Omit<CliOption, 'name' | 'required'>;
 
 const OPTION_CATALOG: Record<string, OptionMetadata> = {
+  "access": { description: "Project access scope.", type: 'enum', values: ["all", "selected"] },
   "activate": { description: "Activate the created resource.", type: 'boolean' },
   "all": { description: "Include all records, including dismissed records where applicable.", type: 'boolean' },
   "allowed-origins": { description: "Comma-separated list of allowed widget origins.", type: 'string' },
   "audio": { description: "Path to a local audio recording file.", type: 'string' },
   "audio-content-type": { description: "MIME type for the separate audio upload.", type: 'string' },
   "branch": { description: "Default Git branch.", type: 'string' },
+  "base-url": { description: "Override the UserTold app origin.", type: 'string' },
   "brand-color": { description: "Brand color hex value.", type: 'string' },
   "consent-text": { description: "Consent checkbox text shown to participants.", type: 'string' },
   "content-type": { description: "MIME type for a local upload.", type: 'string' },
@@ -102,6 +104,7 @@ const OPTION_CATALOG: Record<string, OptionMetadata> = {
   "header": { description: "HTTP header in key:value form (repeatable).", type: 'string' },
   "help": { description: "Show help for the selected command.", type: 'boolean', aliases: ["h"] },
   "intake": { description: "Intake handle to attach to the study.", type: 'string' },
+  "installation-id": { description: "GitHub App installation ID.", type: 'string' },
   "interval": { description: "Polling interval in seconds.", type: 'integer' },
   "interview": { description: "Interview ID filter.", type: 'string' },
   "json": { description: "Output structured JSON.", type: 'boolean' },
@@ -124,6 +127,7 @@ const OPTION_CATALOG: Record<string, OptionMetadata> = {
   "page-url": { description: "Example value for the {{page_url}} variable.", type: 'string' },
   "port": { description: "Local OAuth callback port.", type: 'integer' },
   "priority": { description: "Priority value.", type: 'integer' },
+  "projects": { description: "Comma-separated project IDs for selected access.", type: 'string' },
   "processing-status": { description: "Filter by processing status.", type: 'enum', values: ["failed","done"] },
   "provider": { description: "Delivery provider.", type: 'enum', values: ["auto","github","linear"] },
   "query": { description: "Example question for a knowledge action test.", type: 'string' },
@@ -131,6 +135,8 @@ const OPTION_CATALOG: Record<string, OptionMetadata> = {
   "raw": { description: "Print raw output.", type: 'boolean' },
   "reason": { description: "Reason text.", type: 'string' },
   "repo": { description: "GitHub repository URL.", type: 'string' },
+  "return-to": { description: "App-relative path to return to after connecting.", type: 'string' },
+  "role": { description: "Organization role.", type: 'enum', values: ["owner", "admin", "member"] },
   "script": { description: "Study script JSON or @file.", type: 'json' },
   "search": { description: "Search text.", type: 'string' },
   "session": { description: "Interview session ID.", type: 'string' },
@@ -146,6 +152,7 @@ const OPTION_CATALOG: Record<string, OptionMetadata> = {
   "study-title": { description: "Title for the bootstrapped study.", type: 'string' },
   "summary": { description: "Summary text.", type: 'string' },
   "target-surface": { description: "Area filter.", type: 'enum', values: ["product_under_test","usertold_widget_interview","interviewer_conductor_behavior","ambiguous_needs_review","all"] },
+  "team-id": { description: "Linear team ID.", type: 'string' },
   "text": { description: "Annotation text.", type: 'string' },
   "thank-you-message": { description: "Message shown after a completed intake.", type: 'string' },
   "timeline": { description: "Path to a session timeline file for added context.", type: 'string' },
@@ -165,6 +172,10 @@ const OPTION_CATALOG: Record<string, OptionMetadata> = {
 };
 
 const GLOBAL_OPTION_NAMES = ['env', 'json', 'format', 'local', 'dry-run', 'help'] as const;
+const COMMAND_ORDER = [
+  'auth', 'organization', 'project', 'study', 'intake', 'interview', 'evidence', 'work',
+  'settings', 'knowledge', 'integration', 'billing', 'export', 'init', 'completions',
+] as const;
 const GLOBAL_OPTIONS: CliOption[] = GLOBAL_OPTION_NAMES.map(name => ({
   name,
   ...OPTION_CATALOG[name],
@@ -196,7 +207,13 @@ function commandUsage(group: string, subcommand: string, positionals: CliPositio
 }
 
 export function buildCommandSurface(): CommandSurface {
-  const commands: CliCommand[] = Object.entries(COMMAND_REGISTRY).map(([name, command]) => {
+  const registryEntries = Object.entries(COMMAND_REGISTRY).sort(([left], [right]) => {
+    const leftIndex = COMMAND_ORDER.indexOf(left as typeof COMMAND_ORDER[number]);
+    const rightIndex = COMMAND_ORDER.indexOf(right as typeof COMMAND_ORDER[number]);
+    return (leftIndex === -1 ? Number.MAX_SAFE_INTEGER : leftIndex)
+      - (rightIndex === -1 ? Number.MAX_SAFE_INTEGER : rightIndex);
+  });
+  const commands: CliCommand[] = registryEntries.map(([name, command]) => {
     if (command.kind === 'command') {
       return {
         kind: 'command',
