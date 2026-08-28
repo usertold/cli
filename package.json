@@ -1,0 +1,59 @@
+{
+  "name": "usertold",
+  "version": "2.0.0",
+  "description": "Review source-linked user interview evidence and turn it into prioritized work from your terminal or coding agent.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/usertold/cli.git"
+  },
+  "homepage": "https://usertold.ai/docs/cli",
+  "bugs": {
+    "url": "https://github.com/usertold/cli/issues"
+  },
+  "bin": {
+    "usertold": "dist/usertold.js"
+  },
+  "files": [
+    "dist/usertold.js",
+    "README.md",
+    "LICENSE",
+    "NOTICE",
+    "TRADEMARKS.md",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/cli/*.test.ts src/cli/lib/*.test.ts",
+    "lint:boundary": "node scripts/check-public-boundary.mjs",
+    "check": "npm run typecheck && npm test && npm run build && npm run lint:boundary && npm run package:verify",
+    "package:verify": "node scripts/verify-package.mjs",
+    "prepack": "npm run build && npm run lint:boundary"
+  },
+  "keywords": [
+    "user-research",
+    "interviews",
+    "evidence",
+    "product",
+    "cli",
+    "agent"
+  ],
+  "dependencies": {
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "esbuild": "^0.28.2",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  }
+}
