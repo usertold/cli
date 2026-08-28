@@ -80,7 +80,7 @@ function runCli(args: string[], env: NodeJS.ProcessEnv): Promise<{ code: number 
 
 test('every registered dry-run command exits before remote or local mutation', async () => {
   const testCases = registeredDryRunCases();
-  assert.equal(testCases.length, 86);
+  assert.equal(testCases.length, 117);
 
   const requests: string[] = [];
   const server = createServer((req, res) => {

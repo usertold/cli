@@ -53,6 +53,20 @@ test('nested human and JSON help share descriptions, required inputs, and aliase
   assert.ok(knowledge && knowledge.kind === 'group');
   assert.ok(knowledge.subcommands.apply.options.some(option => option.name === 'data' && option.required));
 
+  const settings = surface.commands.find(command => command.name === 'settings');
+  assert.ok(settings && settings.kind === 'group');
+  assert.deepEqual(
+    settings.subcommands.set.options.find(option => option.name === 'key')?.values,
+    ['openai_api_key', 'retention_days'],
+  );
+
+  const auth = surface.commands.find(command => command.name === 'auth');
+  assert.ok(auth && auth.kind === 'group');
+  assert.deepEqual(
+    auth.subcommands['browser-session'].options.find(option => option.name === 'format')?.values,
+    ['storage', 'env', 'cookie', 'jwt'],
+  );
+
   const interview = surface.commands.find(command => command.name === 'interview');
   assert.ok(interview && interview.kind === 'group');
   assert.ok(!('end' in interview.subcommands));
