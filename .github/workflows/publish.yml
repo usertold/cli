@@ -51,12 +51,12 @@ jobs:
           PACKAGE_VERSION: ${{ steps.release.outputs.version }}
         run: |
           TAG="v$PACKAGE_VERSION"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            exit 0
+          fi
           if git ls-remote --exit-code origin "refs/tags/$TAG" >/dev/null 2>&1; then
             git fetch --force origin "refs/tags/$TAG:refs/tags/$TAG"
             test "$(git rev-list -n 1 "$TAG")" = "$GITHUB_SHA"
-          fi
-          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            exit 0
           fi
           awk -v version="$PACKAGE_VERSION" '
             index($0, "## " version " ") == 1 { found = 1; next }
