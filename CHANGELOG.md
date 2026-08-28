@@ -10,7 +10,7 @@ The complete pre-open-source 1.x package history is preserved in
 - Moved the `usertold` npm package into a dedicated public repository so its source, shipped files, build checks, and path to the npm registry can be inspected independently from the private UserTold service.
 - Licensed the client under Apache-2.0 and added explicit trademark and third-party notices.
 - Defined a continuously verified package boundary: only supported customer workflows, documentation, and license files ship. Private extraction, raw API, administration, forensics, forced termination, and operator repair commands stay out of the package.
-- Added a human-gated release chain. CI accepts only a verified signed tag on the exact reviewed `main` commit, builds and verifies one tarball, and can only submit it to npm staging with a short-lived trusted-publishing credential. A human maintainer must inspect and approve the staged package with npm 2FA before it becomes public.
+- Added a reviewed release chain. Source and workflow changes reach `main` only after human approval; a human-signed release tag triggers the full package gate and direct npm publication with provenance through a short-lived trusted-publishing credential. No long-lived npm publishing token is required.
 
 ### Complete customer workspace management
 
