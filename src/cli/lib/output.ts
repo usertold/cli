@@ -29,15 +29,15 @@ export const VOCAB_OUTPUT_KEYS: Record<string, string> = {
   session: 'interview',
   signals: 'evidence',
   signal: 'evidence',
-  tasks: 'work',
-  task: 'work',
+  tasks: 'findings',
+  task: 'finding',
   // Composed planning collections (project overview, etc.).
   recent_sessions: 'recent_interviews',
   recent_signals: 'recent_evidence',
-  top_tasks: 'top_work',
+  top_tasks: 'top_findings',
   top_signals: 'top_evidence',
   signal_counts: 'evidence_counts',
-  task_counts: 'work_counts',
+  task_counts: 'finding_counts',
   session_counts: 'interview_counts',
 };
 

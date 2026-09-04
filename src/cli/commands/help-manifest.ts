@@ -113,7 +113,7 @@ const OPTION_CATALOG: Record<string, OptionMetadata> = {
   "local": { description: "Shortcut for --env local.", type: 'boolean' },
   "max-participants": { description: "Maximum number of participants.", type: 'integer' },
   "min-confidence": { description: "Minimum evidence confidence (0-1).", type: 'number' },
-  "min-priority": { description: "Minimum work item priority.", type: 'integer' },
+  "min-priority": { description: "Minimum Finding priority.", type: 'integer' },
   "mode": { description: "Interview mode.", type: 'string' },
   "name": { description: "Name.", type: 'string' },
   "no-auth": { description: "Do not inject a bearer token.", type: 'boolean' },
@@ -167,13 +167,13 @@ const OPTION_CATALOG: Record<string, OptionMetadata> = {
   "video-content-type": { description: "MIME type for the separate video upload.", type: 'string' },
   "wait": { description: "Wait for background processing to finish.", type: 'boolean' },
   "welcome-message": { description: "Welcome message shown to participants.", type: 'string' },
-  "work": { description: "Work item ID filter.", type: 'string' },
+  "finding": { description: "Finding ID filter.", type: 'string' },
   "yes": { description: "Skip prompts and run non-interactively.", type: 'boolean' },
 };
 
 const GLOBAL_OPTION_NAMES = ['env', 'json', 'format', 'local', 'dry-run', 'help'] as const;
 const COMMAND_ORDER = [
-  'auth', 'organization', 'project', 'study', 'intake', 'interview', 'evidence', 'work',
+  'auth', 'organization', 'project', 'study', 'intake', 'interview', 'evidence', 'findings',
   'settings', 'knowledge', 'integration', 'billing', 'export', 'init', 'completions',
 ] as const;
 const GLOBAL_OPTIONS: CliOption[] = GLOBAL_OPTION_NAMES.map(name => ({
@@ -338,7 +338,7 @@ export function validateCommandInput(commandName: string, subcommandName: string
 const DRY_RUN_REQUIRED_OPTION_GROUPS: Record<string, string[]> = {
   'project update': ['name', 'handle', 'description'],
   'interview update': ['status', 'summary'],
-  'work update': ['title', 'description', 'status', 'effort', 'priority'],
+  'findings update': ['title', 'description', 'status', 'effort', 'priority'],
   'intake update': [
     'title', 'description', 'status', 'welcome-message', 'thank-you-message',
     'disqualified-message', 'brand-color', 'consent-text', 'max-participants',

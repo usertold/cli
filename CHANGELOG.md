@@ -3,6 +3,17 @@
 The complete pre-open-source 1.x package history is preserved in
 [`docs/RELEASE_NOTES_1X.md`](docs/RELEASE_NOTES_1X.md).
 
+## 3.0.0 — 2026-09-04
+
+### Findings vocabulary
+
+- Replaced the top-level `usertold work` command group with `usertold findings`; the new binary does not include a `work` alias.
+- Renamed the Evidence list's entity filter from `--work` to `--finding` and updated Finding positional labels in machine-readable help.
+- Renamed the CLI's explicit top-level JSON presentation keys from task terminology to Finding terminology while preserving nested API payloads, `/tasks/...` routes, and opaque `tsk_` references.
+- Defined a Finding as an Evidence-backed synthesis that can be reviewed and sent to product triage; it is not automatically a task, solution, roadmap commitment, or delivery issue.
+
+This is a major release because the command-group rename and JSON-key rename are intentionally breaking. Existing 2.x installations remain compatible with the retained server API.
+
 ## 2.0.0 — 2026-08-28
 
 ### A public, reviewable CLI

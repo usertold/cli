@@ -2,7 +2,7 @@
 
 The open-source command-line client for [UserTold.ai](https://usertold.ai).
 
-UserTold runs a voice interview when a real user gets stuck, in the same session, so the quote, screen, and page path stay together. This CLI lets you and your coding agent review that source-linked evidence before it becomes prioritized work or a GitHub or Linear issue.
+UserTold runs a voice interview when a real user gets stuck, in the same session, so the quote, screen, and page path stay together. This CLI lets you and your coding agent review source-linked Evidence, synthesize it into Findings, and send reviewed Findings to product triage.
 
 ## Install
 
@@ -27,8 +27,8 @@ usertold project use acme/checkout
 usertold interview list
 usertold evidence list
 
-# Inspect prioritized work before delivery
-usertold work list
+# Inspect Evidence-backed Findings before product triage
+usertold findings list
 ```
 
 Every command supports human-readable help. Agents and scripts can inspect the same command model as JSON:
@@ -52,7 +52,7 @@ Use `--json` for machine-readable command output and `--dry-run` to inspect supp
 | `intake` | Configure participant qualification and review responses |
 | `interview` | Import, inspect, download, and safely reprocess Interviews |
 | `evidence` | Review and curate source-linked Evidence |
-| `work` | Prioritize Evidence-backed Work and push reviewed work to delivery |
+| `findings` | Review Evidence-backed Findings and send reviewed Findings to product triage |
 | `settings` | Read, validate, set, and remove documented Project settings |
 | `knowledge` | Configure and test the typed project knowledge HTTP action |
 | `integration` | Install, inspect, configure, verify, and disconnect GitHub or Linear delivery |

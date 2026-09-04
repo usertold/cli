@@ -105,6 +105,30 @@ test('printOutput redacts sensitive project fields from json and table output', 
   });
 });
 
+test('printOutput remaps only deliberate top-level task keys to Findings vocabulary', () => {
+  const payload = {
+    task: { id: 'tsk_1', task_counts: { nested: 1 } },
+    tasks: [{ id: 'tsk_2', related_task: { id: 'tsk_1' } }],
+    top_tasks: [{ id: 'tsk_1' }],
+    task_counts: { ready: 2 },
+  };
+
+  const lines = captureLogs(() => printOutput(payload, parsed({ json: 'true' })));
+  const output = JSON.parse(lines.join('\n')) as Record<string, unknown>;
+  assert.deepEqual(Object.keys(output), ['finding', 'findings', 'top_findings', 'finding_counts']);
+  assert.equal((output.finding as { id: string }).id, 'tsk_1');
+  assert.ok('task_counts' in (output.finding as Record<string, unknown>));
+  assert.ok('related_task' in (output.findings as Array<Record<string, unknown>>)[0]);
+});
+
+test('printOutput can preserve literal task-shaped output for raw boundary callers', () => {
+  const lines = captureLogs(() => {
+    printOutput({ task: { id: 'tsk_1' }, tasks: [] }, parsed({ json: 'true' }), { remapVocab: false });
+  });
+  const output = JSON.parse(lines.join('\n')) as Record<string, unknown>;
+  assert.deepEqual(Object.keys(output), ['task', 'tasks']);
+});
+
 test('printTable and printObject handle edge cases', () => {
   withPatchedTTY(true, () => {
     const lines = captureLogs(() => {

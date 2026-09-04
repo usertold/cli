@@ -115,7 +115,7 @@ test('authorization code listener resolves on valid callback using its assigned 
   assert.match(page, /UserTold<span class="wordmark-accent">\.ai<\/span>/);
   assert.match(page, /M42 32V45H23/);
   assert.match(page, /Real users\./);
-  assert.match(page, /Grounded work\./);
+  assert.match(page, /Grounded Findings\./);
   assert.match(page, /Shipped change\./);
   assert.match(page, /Listen\./);
   assert.match(page, /Prove\./);

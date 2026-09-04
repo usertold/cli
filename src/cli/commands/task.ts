@@ -20,9 +20,9 @@ const TASK_PUSH_RETRY_OPTIONS: RequestRetryOptions = {
   shouldRetry: ({ response, error }) => isRetryableTaskPushFailure(response, error),
 };
 
-export async function handleTaskCommand(subcommand: string | undefined, parsed: ParsedArgs): Promise<void> {
+export async function handleFindingCommand(subcommand: string | undefined, parsed: ParsedArgs): Promise<void> {
   if (!subcommand || hasHelpFlag(parsed) || subcommand === 'help' || subcommand === '--help' || subcommand === '-h') {
-    printCommandHelp('work');
+    printCommandHelp('findings');
     return;
   }
 
@@ -30,7 +30,7 @@ export async function handleTaskCommand(subcommand: string | undefined, parsed: 
 
   switch (subcommand) {
     case 'list': {
-      const { projectRef } = await consumeProjectRef(parsed, env, { resourceArgCount: 0, commandLabel: 'work list' });
+      const { projectRef } = await consumeProjectRef(parsed, env, { resourceArgCount: 0, commandLabel: 'findings list' });
 
       const query: {
         status?: string;
@@ -71,7 +71,7 @@ export async function handleTaskCommand(subcommand: string | undefined, parsed: 
     }
 
     case 'get': {
-      const { projectRef, args } = await consumeProjectRef(parsed, env, { resourceArgCount: 1, commandLabel: 'work get' });
+      const { projectRef, args } = await consumeProjectRef(parsed, env, { resourceArgCount: 1, commandLabel: 'findings get' });
       const taskId = args[0];
 
       const data = await requestProjectContract({
@@ -86,7 +86,7 @@ export async function handleTaskCommand(subcommand: string | undefined, parsed: 
     }
 
     case 'create': {
-      const { projectRef } = await consumeProjectRef(parsed, env, { resourceArgCount: 0, commandLabel: 'work create' });
+      const { projectRef } = await consumeProjectRef(parsed, env, { resourceArgCount: 0, commandLabel: 'findings create' });
 
       const title = requireOption(parsed, 'title');
       const body: Record<string, unknown> = { title };
@@ -113,7 +113,7 @@ export async function handleTaskCommand(subcommand: string | undefined, parsed: 
     }
 
     case 'update': {
-      const { projectRef, args } = await consumeProjectRef(parsed, env, { resourceArgCount: 1, commandLabel: 'work update' });
+      const { projectRef, args } = await consumeProjectRef(parsed, env, { resourceArgCount: 1, commandLabel: 'findings update' });
       const taskId = args[0];
 
       const body: Record<string, unknown> = {};
@@ -150,7 +150,7 @@ export async function handleTaskCommand(subcommand: string | undefined, parsed: 
     }
 
     case 'delete': {
-      const { projectRef, args } = await consumeProjectRef(parsed, env, { resourceArgCount: 1, commandLabel: 'work delete' });
+      const { projectRef, args } = await consumeProjectRef(parsed, env, { resourceArgCount: 1, commandLabel: 'findings delete' });
       const taskId = args[0];
 
       const data = await requestProjectContract({
@@ -165,7 +165,7 @@ export async function handleTaskCommand(subcommand: string | undefined, parsed: 
     }
 
     case 'push-status': {
-      const { projectRef, args } = await consumeProjectRef(parsed, env, { resourceArgCount: 1, commandLabel: 'work push-status' });
+      const { projectRef, args } = await consumeProjectRef(parsed, env, { resourceArgCount: 1, commandLabel: 'findings push-status' });
       const taskId = args[0];
 
       const data = await requestProjectContract({
@@ -180,7 +180,7 @@ export async function handleTaskCommand(subcommand: string | undefined, parsed: 
     }
 
     case 'push': {
-      const { projectRef, args } = await consumeProjectRef(parsed, env, { resourceArgCount: 1, commandLabel: 'work push' });
+      const { projectRef, args } = await consumeProjectRef(parsed, env, { resourceArgCount: 1, commandLabel: 'findings push' });
       const taskId = args[0];
 
       const provider = parsed.options.provider && parsed.options.provider !== 'true'
@@ -204,7 +204,7 @@ export async function handleTaskCommand(subcommand: string | undefined, parsed: 
     }
 
     case 'create-from-evidence': {
-      const { projectRef } = await consumeProjectRef(parsed, env, { resourceArgCount: 0, commandLabel: 'work create-from-evidence' });
+      const { projectRef } = await consumeProjectRef(parsed, env, { resourceArgCount: 0, commandLabel: 'findings create-from-evidence' });
       const title = requireOption(parsed, 'title');
       const evidenceStr = requireOption(parsed, 'evidence');
       const evidenceIds = evidenceStr.split(',').map(s => s.trim()).filter(Boolean);
@@ -227,7 +227,7 @@ export async function handleTaskCommand(subcommand: string | undefined, parsed: 
     }
 
     default:
-      fail(`Unknown work command: ${subcommand}`);
+      fail(`Unknown findings command: ${subcommand}`);
   }
 }
 

@@ -1,14 +1,14 @@
 # MCP and CLI command coverage
 
 UserTold uses one product vocabulary across the dashboard, MCP server, and CLI:
-**Organization**, **Project**, **Study**, **Interview**, **Evidence**, and **Work**.
+**Organization**, **Project**, **Study**, **Interview**, **Evidence**, and **Finding**.
 API response fields may retain older internal nouns, but the CLI remaps top-level
 output to this public vocabulary.
 
 ## MCP is the focused agent loop
 
 The public MCP server deliberately exposes the smallest complete
-research-to-delivery loop. Each MCP tool has a direct CLI counterpart:
+research-to-triage loop. Each MCP tool has a direct CLI counterpart:
 
 | MCP tool | CLI counterpart |
 | --- | --- |
@@ -26,11 +26,11 @@ research-to-delivery loop. Each MCP tool has a direct CLI counterpart:
 | `interviews.retry_processing` | `interview reprocess` |
 | `evidence.list` | `evidence list` |
 | `evidence.get` | `evidence get` |
-| `work.list` | `work list` |
-| `work.get_evidence` | `work get` (includes linked Evidence) |
-| `work.create_from_evidence` | `work create-from-evidence` |
-| `work.update` | `work update` |
-| `work.push` | `work push` |
+| `findings.list` | `findings list` |
+| `findings.get_evidence` | `findings get` (includes linked Evidence) |
+| `findings.create_from_evidence` | `findings create-from-evidence` |
+| `findings.update` | `findings update` |
+| `findings.push` | `findings push` |
 
 ## CLI is the complete customer workspace client
 
@@ -39,7 +39,7 @@ customer workspace without relying on an undocumented endpoint:
 
 - authentication, identity, Terms acceptance, and short-lived browser sessions;
 - organization creation, participant roles, Project access, and invitations;
-- complete Project, Study, Intake, Interview, Evidence, and Work lifecycle commands;
+- complete Project, Study, Intake, Interview, Evidence, and Finding lifecycle commands;
 - documented Project settings and the typed knowledge action;
 - GitHub App installation selection, repository selection, health, diagnostics,
   and disconnect; Linear connection status, team selection, and disconnect;

@@ -366,7 +366,7 @@ async function pollUntilDone(opts: {
     if (opts.json) {
       // Re-key the API's top-level nouns to the CLI surface vocabulary.
       const { signals, tasks_suggested, ...restStatus } = status;
-      console.log(JSON.stringify({ ...restStatus, evidence: signals, work_suggested: tasks_suggested }));
+      console.log(JSON.stringify({ ...restStatus, evidence: signals, findings_suggested: tasks_suggested }));
     } else {
       const spinner = SPINNER_FRAMES[frame % SPINNER_FRAMES.length];
       frame++;
@@ -374,7 +374,7 @@ async function pollUntilDone(opts: {
       const parts: string[] = [status.status];
       if (total > 0) parts.push(`transcription: ${completed}/${total}`);
       if (status.signals > 0) parts.push(`evidence: ${status.signals}`);
-      if (status.tasks_suggested > 0) parts.push(`work: ${status.tasks_suggested}`);
+      if (status.tasks_suggested > 0) parts.push(`findings: ${status.tasks_suggested}`);
       if (status.error) parts.push(`error: ${status.error}`);
       process.stderr.write(`\r${spinner} ${parts.join(' | ')}\x1B[K`);
     }
@@ -687,7 +687,7 @@ export async function handleSessionCommand(subcommand: string | undefined, parse
           interview: session,
           processing_status: processingStatus,
           evidence_count: signalCount,
-          work_count: taskCount,
+          finding_count: taskCount,
           analysis_summary: session.analysis_summary ?? null,
           ...(processingDetails.error && { error: processingDetails.error }),
           ...(processingDetails.error_code && { error_code: processingDetails.error_code }),
@@ -701,7 +701,7 @@ export async function handleSessionCommand(subcommand: string | undefined, parse
         }, null, 2));
       } else {
         const processingDetail = processingStatus === 'processed'
-          ? `processed (${signalCount} evidence, ${taskCount} work items suggested)`
+          ? `processed (${signalCount} Evidence, ${taskCount} Findings suggested)`
           : processingStatus;
 
         console.log(`Interview:   ${session.id}`);

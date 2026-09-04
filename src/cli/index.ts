@@ -6,7 +6,7 @@ import { handleAuthCommand } from './commands/auth';
 import { handleProjectCommand } from './commands/project';
 import { handleSessionCommand } from './commands/session';
 import { handleSignalCommand } from './commands/signal';
-import { handleTaskCommand } from './commands/task';
+import { handleFindingCommand } from './commands/task';
 import { handleScreenerCommand } from './commands/screener';
 import { handleStudyCommand } from './commands/study';
 import { handleBillingCommand } from './commands/billing';
@@ -186,10 +186,10 @@ async function dispatch(command: string, argv: string[]): Promise<void> {
       return;
     }
 
-    case 'work': {
+    case 'findings': {
       const [subcommand, ...rest] = argv;
       const parsed = parseArgs(rest);
-      await handleTaskCommand(subcommand, parsed);
+      await handleFindingCommand(subcommand, parsed);
       return;
     }
 

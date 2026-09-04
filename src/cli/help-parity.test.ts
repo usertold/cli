@@ -43,11 +43,11 @@ test('nested human and JSON help share descriptions, required inputs, and aliase
   assert.match(renderCommandHelp('init'), /-y, --yes/);
   assert.ok(commandOptionNames('init').includes('y'));
 
-  const work = surface.commands.find(command => command.name === 'work');
-  assert.ok(work && work.kind === 'group');
-  const effort = work.subcommands.update.options.find(option => option.name === 'effort');
+  const findings = surface.commands.find(command => command.name === 'findings');
+  assert.ok(findings && findings.kind === 'group');
+  const effort = findings.subcommands.update.options.find(option => option.name === 'effort');
   assert.deepEqual(effort?.values, ['xs', 's', 'm', 'l', 'xl']);
-  assert.match(renderCommandHelp('work', 'update'), /--effort <xs\|s\|m\|l\|xl>/);
+  assert.match(renderCommandHelp('findings', 'update'), /--effort <xs\|s\|m\|l\|xl>/);
 
   const knowledge = surface.commands.find(command => command.name === 'knowledge');
   assert.ok(knowledge && knowledge.kind === 'group');
@@ -111,9 +111,9 @@ test('registry validation consumes the same required options and aliases as help
     'apply',
     parseArgs(['--data', '@knowledge.json']),
   ));
-  assert.doesNotThrow(() => validateCommandInput('work', 'update', parseArgs(['tsk_1', '--effort', 'm'])));
+  assert.doesNotThrow(() => validateCommandInput('findings', 'update', parseArgs(['tsk_1', '--effort', 'm'])));
   assert.throws(
-    () => validateCommandInput('work', 'update', parseArgs(['tsk_1', '--effort', 'medium'])),
+    () => validateCommandInput('findings', 'update', parseArgs(['tsk_1', '--effort', 'medium'])),
     /Invalid value "medium" for --effort\. Expected one of: xs, s, m, l, xl/,
   );
   assert.doesNotThrow(() => validateCommandInput('init', undefined, parseArgs(['-y'])));
@@ -135,9 +135,13 @@ test('shell completions derive nested commands, option aliases, and descriptions
   assert.match(bash, /interview/);
   assert.match(bash, /watch/);
   assert.match(bash, /--evidence/);
+  assert.match(bash, /findings/);
+  assert.doesNotMatch(bash, /\bwork\b/);
   assert.match(bash, /-y/);
   assert.match(fish, /Watch processing progress\./);
   assert.match(fish, /Include extracted evidence in the watch output\./);
+  assert.match(fish, /findings/);
+  assert.doesNotMatch(fish, /\bwork\b/);
   assert.match(fish, /-s y/);
 });
 

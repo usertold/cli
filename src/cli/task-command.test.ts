@@ -25,7 +25,7 @@ function runCli(args: string[], env: NodeJS.ProcessEnv): Promise<CliRunResult> {
   });
 }
 
-test('task commands map to expected API endpoints and transforms', async () => {
+test('findings commands preserve the complete task-shaped HTTP contract', async () => {
   const requests: Array<{ method: string; url: string; body: unknown }> = [];
 
   const server = createServer((req, res) => {
@@ -48,9 +48,39 @@ test('task commands map to expected API endpoints and transforms', async () => {
         return;
       }
 
-      if (req.method === 'PATCH' && req.url === '/api/orgs/acme/projects/checkout/tasks/task_2') {
+      if (req.method === 'POST' && req.url === '/api/orgs/acme/projects/checkout/tasks/from-signals') {
+        res.writeHead(200, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({ task: { id: 'tsk_3' }, linkedSignalIds: ['sig_1'], priority: { score: 80, label: 'high' } }));
+        return;
+      }
+
+      if (req.method === 'GET' && req.url === '/api/orgs/acme/projects/checkout/tasks/tsk_2') {
+        res.writeHead(200, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({ task: { id: 'tsk_2' }, signals: [] }));
+        return;
+      }
+
+      if (req.method === 'PATCH' && req.url === '/api/orgs/acme/projects/checkout/tasks/tsk_2') {
         res.writeHead(200, { 'content-type': 'application/json' });
         res.end(JSON.stringify({ ok: true }));
+        return;
+      }
+
+      if (req.method === 'GET' && req.url === '/api/orgs/acme/projects/checkout/tasks/tsk_2/provider-state') {
+        res.writeHead(200, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({ providers: [] }));
+        return;
+      }
+
+      if (req.method === 'POST' && req.url === '/api/orgs/acme/projects/checkout/tasks/tsk_2/push') {
+        res.writeHead(200, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({ taskId: 'tsk_2', provider: 'github', issueUrl: null, issueNumber: null, status: 'ready', pushed: true, alreadyPushed: false }));
+        return;
+      }
+
+      if (req.method === 'DELETE' && req.url === '/api/orgs/acme/projects/checkout/tasks/tsk_2') {
+        res.writeHead(200, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({ success: true }));
         return;
       }
 
@@ -77,7 +107,7 @@ test('task commands map to expected API endpoints and transforms', async () => {
 
   try {
     const list = await runCli([
-      'work', 'list', 'acme/checkout',
+      'findings', 'list', 'acme/checkout',
       '--status', 'ready',
       '--target-surface', 'all',
       '--limit', '5',
@@ -85,10 +115,13 @@ test('task commands map to expected API endpoints and transforms', async () => {
       '--json',
     ], env);
     assert.equal(list.code, 0, list.stderr);
+    const listPayload = JSON.parse(list.stdout) as Record<string, unknown>;
+    assert.ok('findings' in listPayload);
+    assert.ok(!('tasks' in listPayload));
     assert.match(list.stdout, /task_1/);
 
     const create = await runCli([
-      'work', 'create', 'acme/checkout',
+      'findings', 'create', 'acme/checkout',
       '--title', 'Fix checkout',
       '--description', 'Users cannot submit',
       '--effort', 'm',
@@ -101,41 +134,61 @@ test('task commands map to expected API endpoints and transforms', async () => {
     assert.equal((createReq?.body as { title?: string })?.title, 'Fix checkout');
     assert.equal((createReq?.body as { priority_score?: number })?.priority_score, 85);
 
-    const updateTask = await runCli(['work', 'update', 'acme/checkout', 'task_2', '--status', 'done', '--json'], env);
+    const get = await runCli(['findings', 'get', 'acme/checkout', 'tsk_2', '--json'], env);
+    assert.equal(get.code, 0, get.stderr);
+
+    const fromEvidence = await runCli([
+      'findings', 'create-from-evidence', 'acme/checkout',
+      '--title', 'Checkout confusion', '--description', 'Repeated pattern', '--evidence', 'sig_1', '--json',
+    ], env);
+    assert.equal(fromEvidence.code, 0, fromEvidence.stderr);
+    const fromEvidenceReq = requests.find((r) => r.method === 'POST' && r.url === '/api/orgs/acme/projects/checkout/tasks/from-signals');
+    assert.deepEqual(fromEvidenceReq?.body, { title: 'Checkout confusion', signal_ids: ['sig_1'], description: 'Repeated pattern' });
+
+    const updateTask = await runCli(['findings', 'update', 'acme/checkout', 'tsk_2', '--status', 'done', '--json'], env);
     assert.equal(updateTask.code, 0, updateTask.stderr);
 
-    const updateReq = requests.find((r) => r.method === 'PATCH' && r.url === '/api/orgs/acme/projects/checkout/tasks/task_2');
+    const updateReq = requests.find((r) => r.method === 'PATCH' && r.url === '/api/orgs/acme/projects/checkout/tasks/tsk_2');
     assert.equal((updateReq?.body as { status?: string })?.status, 'done');
+
+    const pushStatus = await runCli(['findings', 'push-status', 'acme/checkout', 'tsk_2', '--json'], env);
+    assert.equal(pushStatus.code, 0, pushStatus.stderr);
+
+    const push = await runCli(['findings', 'push', 'acme/checkout', 'tsk_2', '--json'], env);
+    assert.equal(push.code, 0, push.stderr);
+
+    const remove = await runCli(['findings', 'delete', 'acme/checkout', 'tsk_2', '--json'], env);
+    assert.equal(remove.code, 0, remove.stderr);
   } finally {
     await new Promise<void>((resolve, reject) => server.close((err) => (err ? reject(err) : resolve())));
   }
 });
 
-test('work commands reject the removed --type option', async () => {
+test('findings commands reject the removed --type option', async () => {
   const env = {
     ...process.env,
     USERTOLD_API_BASE: 'http://127.0.0.1:1',
     USERTOLD_API_KEY: 'token-from-env',
   };
 
-  const result = await runCli(['work', 'list', 'acme/checkout', '--type', 'bug', '--json'], env);
+  const result = await runCli(['findings', 'list', 'acme/checkout', '--type', 'bug', '--json'], env);
   assert.notEqual(result.code, 0);
   assert.match(result.stderr, /Unknown flag\(s\): --type/);
 });
 
-test('task measure is not a supported CLI command', async () => {
+test('findings measure is not a supported CLI command', async () => {
   const env = {
     ...process.env,
     USERTOLD_API_BASE: 'http://127.0.0.1:1',
     USERTOLD_API_KEY: 'token-from-env',
   };
 
-  const result = await runCli(['work', 'measure', 'acme/checkout', 'task_2', '--json'], env);
+  const result = await runCli(['findings', 'measure', 'acme/checkout', 'tsk_2', '--json'], env);
   assert.notEqual(result.code, 0);
-  assert.match(result.stderr, /Unknown work command: measure/);
+  assert.match(result.stderr, /Unknown findings command: measure/);
 });
 
-test('task commands reject prj_* project IDs before making an API request', async () => {
+test('findings commands reject prj_* project IDs before making an API request', async () => {
   const requests: Array<{ method: string; url: string }> = [];
 
   const server = createServer((req, res) => {
@@ -156,7 +209,7 @@ test('task commands reject prj_* project IDs before making an API request', asyn
   };
 
   try {
-    const result = await runCli(['work', 'list', 'prj_1', '--json'], env);
+    const result = await runCli(['findings', 'list', 'prj_1', '--json'], env);
     assert.notEqual(result.code, 0);
     assert.match(result.stderr, /requires canonical project refs/i);
     assert.deepEqual(requests, []);
@@ -165,7 +218,7 @@ test('task commands reject prj_* project IDs before making an API request', asyn
   }
 });
 
-test('task push retries Cloudflare 1010 and 500 responses before succeeding', async () => {
+test('findings push retries Cloudflare 1010 and 500 responses before succeeding', async () => {
   let pushAttempts = 0;
 
   const server = createServer((req, res) => {
@@ -220,7 +273,7 @@ test('task push retries Cloudflare 1010 and 500 responses before succeeding', as
   };
 
   try {
-    const result = await runCli(['work', 'push', 'acme/checkout', 'tsk_1', '--json'], env);
+    const result = await runCli(['findings', 'push', 'acme/checkout', 'tsk_1', '--json'], env);
     assert.equal(result.code, 0, result.stderr);
     assert.match(result.stdout, /"pushed": true/);
     assert.equal(pushAttempts, 3);

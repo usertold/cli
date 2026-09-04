@@ -16,7 +16,7 @@ type DryRunCase = {
 const UPDATE_OPTION_SAMPLES: Record<string, string[]> = {
   'project update': ['--name', 'Planned name'],
   'interview update': ['--summary', 'Planned summary'],
-  'work update': ['--title', 'Planned title'],
+  'findings update': ['--title', 'Planned title'],
   'intake update': ['--title', 'Planned title'],
   'study update': ['--title', 'Planned title'],
 };
@@ -142,10 +142,10 @@ test('dry-run resolves default-project resource arguments like normal execution'
   };
 
   try {
-    const result = await runCli(['work', 'delete', 'work_1', '--dry-run', '--json'], env);
+    const result = await runCli(['findings', 'delete', 'tsk_1', '--dry-run', '--json'], env);
     assert.equal(result.code, 0, result.stderr);
     const plan = JSON.parse(result.stdout) as { arguments: Record<string, string> };
-    assert.deepEqual(plan.arguments, { projectRef: 'acme/checkout', workId: 'work_1' });
+    assert.deepEqual(plan.arguments, { projectRef: 'acme/checkout', findingId: 'tsk_1' });
 
     const separateMedia = await runCli([
       'interview', 'upload-video', '--audio', 'audio.wav', '--dry-run', '--json',
@@ -174,7 +174,7 @@ test('dry-run rejects invalid registered option values before producing a plan',
     USERTOLD_API_KEY: 'test-token',
   };
   const result = await runCli([
-    'work', 'push', 'acme/checkout', 'work_1', '--provider', 'typo', '--dry-run', '--json',
+    'findings', 'push', 'acme/checkout', 'tsk_1', '--provider', 'typo', '--dry-run', '--json',
   ], env);
   assert.equal(result.code, 2);
   assert.equal(result.stdout, '');
