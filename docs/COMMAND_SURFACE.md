@@ -2,8 +2,9 @@
 
 UserTold uses one product vocabulary across the dashboard, MCP server, and CLI:
 **Organization**, **Project**, **Study**, **Interview**, **Evidence**, and **Finding**.
-API response fields may retain older internal nouns, but the CLI remaps top-level
-output to this public vocabulary.
+Canonical Findings responses use that vocabulary directly. Older internal nouns
+remain only in API families that have not yet moved to canonical DTOs, where the
+CLI remaps deliberate top-level output keys.
 
 ## MCP is the focused agent loop
 

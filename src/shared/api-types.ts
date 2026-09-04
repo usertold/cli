@@ -1,8 +1,6 @@
 import { z } from 'zod';
 import { INTERVIEW_MODES, SESSION_STATUSES } from './constants';
 import { TARGET_SURFACE_FILTERS, TARGET_SURFACES } from './target-surface';
-import { WORK_EFFORT_ESTIMATES } from './task-effort';
-import { TASK_STATUSES } from './task-status';
 import {
   hasControlCharacters,
   USER_DISPLAY_NAME_MAX_LENGTH,
@@ -77,45 +75,6 @@ export const ApiOrganizationInvitationTokenRequestSchema = z.object({
 export const ApiOrganizationInvitationAcceptRequestSchema = ApiOrganizationInvitationTokenRequestSchema.extend({
   organizationHandle: z.string().min(1),
 }).strict();
-
-// --- Tasks ---
-
-export const ApiTaskCreateRequestSchema = z.object({
-  title: z.string(),
-  description: z.string().nullable().optional(),
-  priority_score: z.number().optional(),
-  effort_estimate: z.enum(WORK_EFFORT_ESTIMATES).nullable().optional(),
-}).strict();
-export type ApiTaskCreateRequest = z.infer<typeof ApiTaskCreateRequestSchema>;
-
-export const ApiTaskPatchRequestSchema = ApiTaskCreateRequestSchema.partial().extend({
-  status: z.enum(TASK_STATUSES).optional(),
-  status_reason: z.string().nullable().optional(),
-});
-export type ApiTaskPatchRequest = z.infer<typeof ApiTaskPatchRequestSchema>;
-
-export const ApiTaskCreateFromSignalsRequestSchema = z.object({
-  title: z.string(),
-  description: z.string().nullable().optional(),
-  signal_ids: z.array(z.string()).min(1),
-}).strict();
-export type ApiTaskCreateFromSignalsRequest = z.infer<typeof ApiTaskCreateFromSignalsRequestSchema>;
-
-export const ApiTaskRecurrenceCandidateReviewRequestSchema = z.object({
-  status: z.enum(['confirmed', 'dismissed']),
-});
-export type ApiTaskRecurrenceCandidateReviewRequest = z.infer<typeof ApiTaskRecurrenceCandidateReviewRequestSchema>;
-
-export const ApiTaskListQuerySchema = z.object({
-  status: z.enum(TASK_STATUSES).optional(),
-  target_surface: z.enum(TARGET_SURFACE_FILTERS).optional(),
-  include_closed: z.string().optional(),
-  session_id: z.string().optional(),
-  min_priority: z.string().optional(),
-  limit: z.string().optional(),
-  offset: z.string().optional(),
-}).strict();
-export type ApiTaskListQuery = z.infer<typeof ApiTaskListQuerySchema>;
 
 // --- Signals ---
 

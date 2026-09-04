@@ -9,7 +9,8 @@ The complete pre-open-source 1.x package history is preserved in
 
 - Replaced the top-level `usertold work` command group with `usertold findings`; the new binary does not include a `work` alias.
 - Renamed the Evidence list's entity filter from `--work` to `--finding` and updated Finding positional labels in machine-readable help.
-- Renamed the CLI's explicit top-level JSON presentation keys from task terminology to Finding terminology while preserving nested API payloads, `/tasks/...` routes, and opaque `tsk_` references.
+- Moved every `findings` command to the canonical `/findings/...` API and its Finding request and response DTOs; opaque Finding references remain pass-through values.
+- Let `findings push` delegate omitted or `--provider auto` provider selection to the dashboard configuration while retaining explicit `linear` and `github` overrides.
 - Defined a Finding as an Evidence-backed synthesis that can be reviewed and sent to product triage; it is not automatically a task, solution, roadmap commitment, or delivery issue.
 
 This is a major release because the command-group rename and JSON-key rename are intentionally breaking. Existing 2.x installations remain compatible with the retained server API.

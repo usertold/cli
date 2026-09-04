@@ -105,10 +105,10 @@ test('printOutput redacts sensitive project fields from json and table output', 
   });
 });
 
-test('printOutput remaps only deliberate top-level task keys to Findings vocabulary', () => {
+test('printOutput preserves canonical Finding keys and only remaps composed overview keys', () => {
   const payload = {
-    task: { id: 'tsk_1', task_counts: { nested: 1 } },
-    tasks: [{ id: 'tsk_2', related_task: { id: 'tsk_1' } }],
+    finding: { finding_ref: 'fnd_1', task_counts: { nested: 1 } },
+    findings: [{ finding_ref: 'fnd_2', related_task: { id: 'tsk_1' } }],
     top_tasks: [{ id: 'tsk_1' }],
     task_counts: { ready: 2 },
   };
@@ -116,7 +116,7 @@ test('printOutput remaps only deliberate top-level task keys to Findings vocabul
   const lines = captureLogs(() => printOutput(payload, parsed({ json: 'true' })));
   const output = JSON.parse(lines.join('\n')) as Record<string, unknown>;
   assert.deepEqual(Object.keys(output), ['finding', 'findings', 'top_findings', 'finding_counts']);
-  assert.equal((output.finding as { id: string }).id, 'tsk_1');
+  assert.equal((output.finding as { finding_ref: string }).finding_ref, 'fnd_1');
   assert.ok('task_counts' in (output.finding as Record<string, unknown>));
   assert.ok('related_task' in (output.findings as Array<Record<string, unknown>>)[0]);
 });
