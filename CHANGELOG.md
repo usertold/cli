@@ -5,17 +5,39 @@ The complete pre-open-source 1.x package history is preserved in
 
 ## 3.0.0 — 2026-09-04
 
-### Findings vocabulary
+### A simpler model from research to product decisions
 
-- Replaced the top-level `usertold work` command group with `usertold findings`; the new binary does not include a `work` alias.
-- Renamed the Evidence list's entity filter from `--work` to `--finding` and updated Finding positional labels in machine-readable help.
-- Moved every `findings` command to the canonical `/findings/...` API and its Finding request and response DTOs; opaque Finding references remain pass-through values.
-- Let `findings push` delegate omitted or `--provider auto` provider selection to the dashboard configuration while retaining explicit `linear` and `github` overrides.
-- Documented the complete Study-to-Finding workflow and made Study activation, Finding lifecycle values, provider defaults, and read-only command metadata explicit in human and JSON help.
-- Fixed the packaged JSON help and HTTP User-Agent to report the same `3.0.0` version as `usertold --version`.
-- Defined a Finding as an Evidence-backed synthesis that can be reviewed and sent to product triage; it is not automatically a task, solution, roadmap commitment, or delivery issue.
+UserTold now presents one consistent mental model across the CLI and the service:
 
-This is a major release because the command-group rename and JSON-key rename are intentionally breaking. Existing 2.x installations remain compatible with the retained server API.
+- **Interviews** are the source record of what a participant said and did.
+- **Evidence** is the source-linked analysis extracted from those Interviews and kept reviewable against the original record.
+- **Findings** synthesize related Evidence into a problem worth evaluating. A Finding can be reviewed and prioritized without implying that a solution has been chosen or delivery has been committed.
+
+This separation also makes the lifecycle clearer. Research review establishes
+whether a Finding is supported and ready for product consideration; delivery
+tracks what happens only after it is intentionally sent to GitHub or Linear.
+Research maturity and product execution are related, but they are not the same
+state.
+
+To make that model real rather than a vocabulary layer, 3.0.0 aligns the public
+interface with the canonical internal implementation. `usertold findings` now
+uses the canonical Finding API and DTOs directly, help follows the complete
+Study → Interview → Evidence → Finding journey, and tracker selection defaults
+to the Project configuration in the dashboard while allowing an explicit
+provider override.
+
+### Migration from 2.x
+
+- `usertold work` is now `usertold findings`; there is no `work` alias.
+- The Evidence list filter `--work` is now `--finding`.
+- Finding JSON uses the canonical Finding response model rather than task-shaped presentation keys.
+- Opaque references remain pass-through values, and existing 2.x installations continue to work through the service's retained compatibility API.
+
+The packaged JSON help, shell-facing command metadata, documentation, and HTTP
+User-Agent now describe and report this same 3.0.0 interface consistently.
+
+This is a major release because the command-group, filter, and JSON model changes
+are intentionally breaking for scripts written against 2.x.
 
 ## 2.0.0 — 2026-08-28
 
