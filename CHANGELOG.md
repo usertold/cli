@@ -3,7 +3,7 @@
 The complete pre-open-source 1.x package history is preserved in
 [`docs/RELEASE_NOTES_1X.md`](docs/RELEASE_NOTES_1X.md).
 
-## 3.0.0 — 2026-09-04
+## 3.0.0 — 2026-09-05
 
 ### A simpler model from research to product decisions
 

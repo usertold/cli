@@ -11,7 +11,7 @@ CLI remaps deliberate top-level output keys.
 The customer workflow crosses six deliberate phases:
 
 1. Create or select a Project, install its widget once, and verify the intended page.
-2. Create a draft Study, review its script and placement, then explicitly activate it.
+2. Create a draft Study, review its script, configure placement, then explicitly activate it and resolve the winner.
 3. Follow completed Interviews through processing and inspect transcript, timeline, and capture limitations.
 4. Review extracted Evidence, including counter-evidence and coverage gaps.
 5. Review server-suggested draft Findings or deliberately create one from selected unlinked Evidence.

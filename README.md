@@ -33,10 +33,10 @@ usertold study update checkout-usability --script @study-script.json
 # Install the Project widget once and verify the target page
 usertold project snippet
 usertold project verify-widget-installation --url https://example.com/checkout
-usertold study resolve --path /checkout
 
-# Activation begins matching eligible participants
+# Activation begins matching eligible participants; then verify the winner
 usertold study update checkout-usability --status active
+usertold study resolve --path /checkout
 
 # Follow one Interview through processing
 usertold interview list --study checkout-usability
