@@ -551,7 +551,7 @@ function getSuccessPage(): string {
     <p class="completion-title">You're all set</p>
     <h1 class="manifest">
       <span>Real users.</span>
-      <span class="manifest-accent">Grounded work.</span>
+      <span class="manifest-accent">Grounded Findings.</span>
       <span>Shipped change.</span>
     </h1>
     <ol class="loop" aria-label="UserTold research loop">

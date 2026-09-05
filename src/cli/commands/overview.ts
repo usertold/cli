@@ -50,7 +50,7 @@ function formatOverview(data: OverviewData): void {
 
   console.log(`Interviews:  ${sessions.total} total (${sessions.completed} completed, ${sessions.active} active)`);
   console.log(`Evidence:    ${signals.total} total${formatSignalBreakdown(signals.by_type)}`);
-  console.log(`Work items:  ${tasks.total} total${formatTaskBreakdown(tasks.by_status)}`);
+  console.log(`Findings:    ${tasks.total} total${formatTaskBreakdown(tasks.by_status)}`);
   console.log(`Intakes:     ${intakes.total} total (${intakes.active} active, ${intakes.total_completed} completed, ${intakes.total_qualified} qualified)`);
   console.log('');
 
@@ -75,7 +75,7 @@ function formatOverview(data: OverviewData): void {
 
   if (top_tasks.length > 0) {
     console.log('');
-    console.log('Top work items:');
+    console.log('Top Findings:');
     for (const t of top_tasks) {
       const id = t.id.length > 12 ? `${t.id.slice(0, 12)}...` : t.id;
       const title = t.title.length > 50 ? `${t.title.slice(0, 47)}...` : t.title;

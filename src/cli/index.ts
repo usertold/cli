@@ -6,7 +6,7 @@ import { handleAuthCommand } from './commands/auth';
 import { handleProjectCommand } from './commands/project';
 import { handleSessionCommand } from './commands/session';
 import { handleSignalCommand } from './commands/signal';
-import { handleTaskCommand } from './commands/task';
+import { handleFindingCommand } from './commands/task';
 import { handleScreenerCommand } from './commands/screener';
 import { handleStudyCommand } from './commands/study';
 import { handleBillingCommand } from './commands/billing';
@@ -20,11 +20,7 @@ import { buildHelpPayload, findCommand, findCommandLeaf, renderCommandHelp, rend
 import { handleCompletionsCommand } from './commands/completions';
 import { printDryRunPlan } from './commands/dry-run';
 import { runWithDryRunProtection } from './lib/dry-run';
-
-declare const __USERTOLD_PUBLIC_CLI_VERSION__: string;
-const CLI_VERSION = typeof __USERTOLD_PUBLIC_CLI_VERSION__ === 'string'
-  ? __USERTOLD_PUBLIC_CLI_VERSION__
-  : '0.0.0-dev';
+import { CLI_VERSION } from './lib/version';
 
 function detectJsonMode(): boolean {
   const argv = process.argv.slice(2);
@@ -186,10 +182,10 @@ async function dispatch(command: string, argv: string[]): Promise<void> {
       return;
     }
 
-    case 'work': {
+    case 'findings': {
       const [subcommand, ...rest] = argv;
       const parsed = parseArgs(rest);
-      await handleTaskCommand(subcommand, parsed);
+      await handleFindingCommand(subcommand, parsed);
       return;
     }
 

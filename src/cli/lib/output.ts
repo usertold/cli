@@ -20,7 +20,7 @@ export function isJsonOutput(parsed: ParsedArgs): boolean {
   return false;
 }
 
-// Some API families still respond with internal nouns (sessions/signals/tasks);
+// Some API families still respond with internal nouns (sessions/signals);
 // the CLI surface speaks the loop vocabulary, so re-key the top-level
 // collection/entity keys before they reach the user. Nested fields stay on the
 // API contract.
@@ -29,15 +29,13 @@ export const VOCAB_OUTPUT_KEYS: Record<string, string> = {
   session: 'interview',
   signals: 'evidence',
   signal: 'evidence',
-  tasks: 'work',
-  task: 'work',
   // Composed planning collections (project overview, etc.).
   recent_sessions: 'recent_interviews',
   recent_signals: 'recent_evidence',
-  top_tasks: 'top_work',
+  top_tasks: 'top_findings',
   top_signals: 'top_evidence',
   signal_counts: 'evidence_counts',
-  task_counts: 'work_counts',
+  task_counts: 'finding_counts',
   session_counts: 'interview_counts',
 };
 

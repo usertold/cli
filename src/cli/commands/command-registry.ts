@@ -325,7 +325,7 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
   },
   "interview": {
     "kind": "group",
-    "summary": "Inspect, import, export, reprocess, and watch your interviews.",
+    "summary": "Capture, import, inspect, download, reprocess, and watch interviews.",
     "subcommands": {
       "list": {
         "summary": "List interviews.",
@@ -714,7 +714,7 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
           {
             "name": "evidence",
             "type": "boolean",
-            "description": "Include extracted evidence in the watch output."
+            "description": "Include newly extracted Evidence while watching processing. After completion, review suggested Findings with `usertold findings list --interview <interviewRef>`."
           }
         ],
         "requiredOptions": [],
@@ -743,7 +743,7 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
           "type",
           "target-surface",
           "interview",
-          "work",
+          "finding",
           "search",
           "limit",
           "offset",
@@ -766,7 +766,7 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
         }
       },
       "coverage-gaps": {
-        "summary": "Show evidence-to-work coverage gaps.",
+        "summary": "Show Evidence-to-Finding coverage gaps.",
         "positionals": [
           {
             "name": "projectRef",
@@ -779,7 +779,7 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
         "examples": [
           "usertold evidence coverage-gaps --help"
         ],
-        "operation": "write",
+        "operation": "read",
         "auth": "required"
       },
       "get": {
@@ -823,7 +823,7 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
         "examples": [
           "usertold evidence case-file --help"
         ],
-        "operation": "write",
+        "operation": "read",
         "auth": "required"
       },
       "annotate": {
@@ -901,7 +901,7 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
         "auth": "required"
       },
       "link": {
-        "summary": "Link an evidence card to a work item.",
+        "summary": "Link an Evidence card to a Finding.",
         "positionals": [
           {
             "name": "projectRef",
@@ -914,9 +914,9 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
             "description": "Evidence card ID."
           },
           {
-            "name": "workId",
+            "name": "findingRef",
             "required": true,
-            "description": "Work item ID."
+            "description": "Opaque Finding reference returned by the API."
           }
         ],
         "options": [],
@@ -928,7 +928,7 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
         "auth": "required"
       },
       "unlink": {
-        "summary": "Unlink an evidence card from its work item.",
+        "summary": "Unlink an Evidence card from its Finding.",
         "positionals": [
           {
             "name": "projectRef",
@@ -973,7 +973,7 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
         "destructive": true
       },
       "bulk-link": {
-        "summary": "Link multiple evidence cards to one work item.",
+        "summary": "Link multiple Evidence cards to one Finding.",
         "positionals": [
           {
             "name": "projectRef",
@@ -981,9 +981,9 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
             "description": "Canonical org/project ref, for example acme/checkout. Falls back to the current project set via `usertold project use`."
           },
           {
-            "name": "workId",
+            "name": "findingRef",
             "required": true,
-            "description": "Work item ID to link the evidence to."
+            "description": "Opaque Finding reference to link the Evidence to."
           }
         ],
         "options": [
@@ -1000,12 +1000,12 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
       }
     }
   },
-  "work": {
+  "findings": {
     "kind": "group",
-    "summary": "Create and hand off evidence-backed work items.",
+    "summary": "Review Evidence-backed Findings and hand reviewed Findings to product triage.",
     "subcommands": {
       "list": {
-        "summary": "List work items.",
+        "summary": "List Findings, optionally filtered by lifecycle, Interview, surface, or priority.",
         "positionals": [
           {
             "name": "projectRef",
@@ -1014,7 +1014,12 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
           }
         ],
         "options": [
-          "status",
+          {
+            "name": "status",
+            "type": "enum",
+            "values": ["backlog", "ready", "in_progress", "done", "wont_fix"],
+            "description": "Finding lifecycle filter. `ready` means reviewed and not yet sent."
+          },
           "target-surface",
           "interview",
           "min-priority",
@@ -1023,7 +1028,8 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
         ],
         "requiredOptions": [],
         "examples": [
-          "usertold work list --help"
+          "usertold findings list --status ready --json",
+          "usertold findings list --interview int_123 --json"
         ],
         "operation": "read",
         "auth": "required",
@@ -1036,7 +1042,7 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
         }
       },
       "get": {
-        "summary": "Get work item details.",
+        "summary": "Get a Finding with linked Evidence and lifecycle, relation, recurrence, and decision context.",
         "positionals": [
           {
             "name": "projectRef",
@@ -1044,21 +1050,21 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
             "description": "Canonical org/project ref, for example acme/checkout. Falls back to the current project set via `usertold project use`."
           },
           {
-            "name": "workId",
+            "name": "findingRef",
             "required": true,
-            "description": "Work item ID."
+            "description": "Opaque Finding reference returned by the API."
           }
         ],
         "options": [],
         "requiredOptions": [],
         "examples": [
-          "usertold work get --help"
+          "usertold findings get acme/checkout fnd_123 --json"
         ],
         "operation": "read",
         "auth": "required"
       },
       "create": {
-        "summary": "Create a work item.",
+        "summary": "Create an unlinked draft Finding; attach supporting Evidence before review.",
         "positionals": [
           {
             "name": "projectRef",
@@ -1076,13 +1082,13 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
           "title"
         ],
         "examples": [
-          "usertold work create --help"
+          "usertold findings create --title \"Checkout confirmation is unclear\""
         ],
         "operation": "write",
         "auth": "required"
       },
       "create-from-evidence": {
-        "summary": "Create a work item from selected evidence cards.",
+        "summary": "Create a draft Finding from selected supporting Evidence.",
         "positionals": [
           {
             "name": "projectRef",
@@ -1100,13 +1106,13 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
           "evidence"
         ],
         "examples": [
-          "usertold work create-from-evidence --help"
+          "usertold findings create-from-evidence --title \"Checkout confirmation is unclear\" --evidence evd_123,evd_456"
         ],
         "operation": "write",
         "auth": "required"
       },
       "update": {
-        "summary": "Update work item fields.",
+        "summary": "Edit a Finding or move it through its review and delivery lifecycle.",
         "positionals": [
           {
             "name": "projectRef",
@@ -1114,27 +1120,32 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
             "description": "Canonical org/project ref, for example acme/checkout. Falls back to the current project set via `usertold project use`."
           },
           {
-            "name": "workId",
+            "name": "findingRef",
             "required": true,
-            "description": "Work item ID."
+            "description": "Opaque Finding reference returned by the API."
           }
         ],
         "options": [
           "title",
           "description",
-          "status",
+          {
+            "name": "status",
+            "type": "enum",
+            "values": ["backlog", "ready", "in_progress", "done", "wont_fix"],
+            "description": "Finding lifecycle value. Use `ready` only after reviewing its supporting Evidence."
+          },
           "effort",
           "priority"
         ],
         "requiredOptions": [],
         "examples": [
-          "usertold work update --help"
+          "usertold findings update acme/checkout fnd_123 --status ready --priority 80 --effort m"
         ],
         "operation": "write",
         "auth": "required"
       },
       "delete": {
-        "summary": "Delete a work item.",
+        "summary": "Delete a Finding.",
         "positionals": [
           {
             "name": "projectRef",
@@ -1142,22 +1153,22 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
             "description": "Canonical org/project ref, for example acme/checkout. Falls back to the current project set via `usertold project use`."
           },
           {
-            "name": "workId",
+            "name": "findingRef",
             "required": true,
-            "description": "Work item ID."
+            "description": "Opaque Finding reference returned by the API."
           }
         ],
         "options": [],
         "requiredOptions": [],
         "examples": [
-          "usertold work delete --help"
+          "usertold findings delete --help"
         ],
         "operation": "delete",
         "auth": "required",
         "destructive": true
       },
       "push": {
-        "summary": "Push a work item to a delivery provider.",
+        "summary": "Send a reviewed Finding to the configured product-triage provider.",
         "positionals": [
           {
             "name": "projectRef",
@@ -1165,23 +1176,29 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
             "description": "Canonical org/project ref, for example acme/checkout. Falls back to the current project set via `usertold project use`."
           },
           {
-            "name": "workId",
+            "name": "findingRef",
             "required": true,
-            "description": "Work item ID."
+            "description": "Opaque Finding reference returned by the API."
           }
         ],
         "options": [
-          "provider"
+          {
+            "name": "provider",
+            "type": "enum",
+            "values": ["auto", "github", "linear"],
+            "description": "Omit or use `auto` for dashboard-configured selection; use `github` or `linear` as an explicit override."
+          }
         ],
         "requiredOptions": [],
         "examples": [
-          "usertold work push --help"
+          "usertold findings push acme/checkout fnd_123",
+          "usertold findings push acme/checkout fnd_123 --provider linear"
         ],
         "operation": "write",
         "auth": "required"
       },
       "push-status": {
-        "summary": "Inspect provider handoff status.",
+        "summary": "Inspect provider links and delivery status for a Finding.",
         "positionals": [
           {
             "name": "projectRef",
@@ -1189,15 +1206,15 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
             "description": "Canonical org/project ref, for example acme/checkout. Falls back to the current project set via `usertold project use`."
           },
           {
-            "name": "workId",
+            "name": "findingRef",
             "required": true,
-            "description": "Work item ID."
+            "description": "Opaque Finding reference returned by the API."
           }
         ],
         "options": [],
         "requiredOptions": [],
         "examples": [
-          "usertold work push-status --help"
+          "usertold findings push-status acme/checkout fnd_123 --json"
         ],
         "operation": "read",
         "auth": "required"
@@ -1529,7 +1546,11 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
           "goals",
           "script",
           "allowed-origins",
-          "activate",
+          {
+            "name": "activate",
+            "type": "boolean",
+            "description": "Activate the Study immediately after creation and begin matching eligible participants."
+          },
           "invitation",
           "visibility"
         ],
@@ -1582,7 +1603,12 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
           "title",
           "handle",
           "description",
-          "status",
+          {
+            "name": "status",
+            "type": "enum",
+            "values": ["draft", "active", "paused", "closed"],
+            "description": "Study lifecycle status. Setting `active` begins matching eligible participants."
+          },
           "intake",
           "goals",
           "script",
@@ -1671,7 +1697,7 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
         "auth": "required"
       },
       "validate-script": {
-        "summary": "Validate a study script without saving.",
+        "summary": "Review a proposed script for an existing Study without updating it.",
         "positionals": [
           {
             "name": "projectRef",
@@ -1689,7 +1715,7 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
         ],
         "requiredOptions": [],
         "examples": [
-          "usertold study validate-script --help"
+          "usertold study validate-script acme/checkout checkout-feedback --script @study-script.json"
         ],
         "operation": "read",
         "auth": "required"
@@ -1837,7 +1863,7 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
   },
   "init": {
     "kind": "command",
-    "summary": "Bootstrap a project, study, and intake.",
+    "summary": "Bootstrap a Project and optionally create and activate an all-pages Study with its Intake.",
     "usage": "usertold init [options]",
     "positionals": [],
     "options": [
@@ -1847,6 +1873,7 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
       "study-title",
       {
         "name": "yes",
+        "description": "Skip prompts; create and activate the default all-pages Study and its Intake.",
         "aliases": [
           "y"
         ]
@@ -2048,7 +2075,7 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
         "examples": ["usertold integration github-select-installation acme/checkout --installation-id 123"], "operation": "write", "auth": "required"
       },
       "github-select-repository": {
-        "summary": "Select the GitHub repository that receives work.",
+        "summary": "Select the GitHub repository that receives reviewed Findings.",
         "positionals": [{ "name": "projectRef", "required": false, "description": "Canonical org/project ref; defaults to the selected project." }],
         "options": ["repo", "branch"], "requiredOptions": ["repo"],
         "examples": ["usertold integration github-select-repository acme/checkout --repo https://github.com/acme/app --branch main"], "operation": "write", "auth": "required"
@@ -2085,7 +2112,7 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
         "options": [], "requiredOptions": [], "examples": ["usertold integration linear-teams acme/checkout --json"], "operation": "read", "auth": "required"
       },
       "linear-select-team": {
-        "summary": "Select the Linear team that receives work.",
+        "summary": "Select the Linear team that receives reviewed Findings.",
         "positionals": [{ "name": "projectRef", "required": false, "description": "Canonical org/project ref; defaults to the selected project." }],
         "options": ["team-id"], "requiredOptions": ["team-id"],
         "examples": ["usertold integration linear-select-team acme/checkout --team-id TEAM_ID"], "operation": "write", "auth": "required"

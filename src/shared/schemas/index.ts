@@ -4,6 +4,7 @@ export * from './response-organizations';
 export * from './response-sessions';
 export * from './response-signals';
 export * from './response-tasks';
+export * from './response-findings';
 export * from './response-intakes';
 export * from './response-studies';
 export * from './response-auth';
