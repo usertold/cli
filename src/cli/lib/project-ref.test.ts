@@ -49,12 +49,12 @@ test('buildProjectApiPath and buildProjectApiPathFromRef build canonical routes'
   );
 
   assert.equal(
-    buildProjectApiPath({ orgHandle: 'acme', projectHandle: 'checkout' }, '/tasks'),
-    '/api/orgs/acme/projects/checkout/tasks',
+    buildProjectApiPath({ orgHandle: 'acme', projectHandle: 'checkout' }, '/findings'),
+    '/api/orgs/acme/projects/checkout/findings',
   );
 
   assert.equal(
-    buildProjectApiPathFromRef('acme/checkout', '/tasks/tsk_1', '<projectRef>'),
-    '/api/orgs/acme/projects/checkout/tasks/tsk_1',
+    buildProjectApiPathFromRef('acme/checkout', '/findings/fnd_1', '<projectRef>'),
+    '/api/orgs/acme/projects/checkout/findings/fnd_1',
   );
 });

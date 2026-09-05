@@ -9,7 +9,7 @@ import { sessionsApiContracts } from './contracts/api-contracts-sessions';
 import { settingsApiContracts } from './contracts/api-contracts-settings';
 import { signalsApiContracts } from './contracts/api-contracts-signals';
 import { studiesApiContracts } from './contracts/api-contracts-studies';
-import { tasksApiContracts } from './contracts/api-contracts-tasks';
+import { findingsApiContracts } from './contracts/api-contracts-findings';
 import { userApiContracts } from './contracts/api-contracts-user';
 
 export const dashboardApiContracts = {
@@ -18,7 +18,7 @@ export const dashboardApiContracts = {
   ...projectsApiContracts,
   ...sessionsApiContracts,
   ...signalsApiContracts,
-  ...tasksApiContracts,
+  ...findingsApiContracts,
   ...intakesApiContracts,
   ...studiesApiContracts,
   ...overviewApiContracts,

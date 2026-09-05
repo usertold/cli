@@ -228,12 +228,12 @@ function printCoverageGaps(data: CoverageGapData): void {
   console.log(`  published_unlinked_evidence: ${data.totals.published_unlinked_evidence}`);
   console.log(`  repeated_needs_review_evidence: ${data.totals.repeated_needs_review_evidence}`);
   console.log(`  high_confidence_unlinked_evidence: ${data.totals.high_confidence_unlinked_evidence}`);
-  console.log(`  work_with_weak_or_no_published_evidence: ${data.totals.work_with_weak_or_no_published_evidence}`);
+  console.log(`  findings_with_weak_or_no_published_evidence: ${data.totals.work_with_weak_or_no_published_evidence}`);
   console.log('');
 
   for (const gap of data.gaps) {
     console.log(`[${gap.type}] ${gap.id}`);
-    console.log(`  ${gap.summary}`);
+    console.log(`  ${presentCoverageGapText(gap.summary)}`);
     console.log(`  Area: ${gap.target_surface}`);
     if (gap.signal_type) {
       console.log(`  Evidence type: ${gap.signal_type}`);
@@ -242,11 +242,18 @@ function printCoverageGaps(data: CoverageGapData): void {
       console.log(`  Evidence: ${gap.evidence_ids.join(', ')}`);
     }
     if (gap.work_ids.length > 0) {
-      console.log(`  Work: ${gap.work_ids.join(', ')}`);
+      console.log(`  Findings: ${gap.work_ids.join(', ')}`);
     }
-    console.log(`  Suggested action: ${gap.suggested_action}`);
+    console.log(`  Suggested action: ${presentCoverageGapText(gap.suggested_action)}`);
     console.log('');
   }
+}
+
+function presentCoverageGapText(value: string): string {
+  return value
+    .replace(/\bwork items\b/gi, 'Findings')
+    .replace(/\bwork item\b/gi, 'Finding')
+    .replace(/\bwork\b/gi, 'Findings');
 }
 
 function printSignalCards(data: SignalListData): void {
@@ -323,8 +330,8 @@ function buildSignalQuery(parsed: ParsedArgs): {
   if (parsed.options.interview && parsed.options.interview !== 'true') {
     query.session_id = parsed.options.interview;
   }
-  if (parsed.options.work && parsed.options.work !== 'true') {
-    query.task_id = parsed.options.work;
+  if (parsed.options.finding && parsed.options.finding !== 'true') {
+    query.task_id = parsed.options.finding;
   }
   if (parsed.options.search && parsed.options.search !== 'true') {
     query.search = parsed.options.search;

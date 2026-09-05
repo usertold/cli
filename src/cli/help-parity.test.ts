@@ -43,11 +43,28 @@ test('nested human and JSON help share descriptions, required inputs, and aliase
   assert.match(renderCommandHelp('init'), /-y, --yes/);
   assert.ok(commandOptionNames('init').includes('y'));
 
-  const work = surface.commands.find(command => command.name === 'work');
-  assert.ok(work && work.kind === 'group');
-  const effort = work.subcommands.update.options.find(option => option.name === 'effort');
+  const findings = surface.commands.find(command => command.name === 'findings');
+  assert.ok(findings && findings.kind === 'group');
+  const effort = findings.subcommands.update.options.find(option => option.name === 'effort');
   assert.deepEqual(effort?.values, ['xs', 's', 'm', 'l', 'xl']);
-  assert.match(renderCommandHelp('work', 'update'), /--effort <xs\|s\|m\|l\|xl>/);
+  assert.match(renderCommandHelp('findings', 'update'), /--effort <xs\|s\|m\|l\|xl>/);
+  const findingStatus = findings.subcommands.update.options.find(option => option.name === 'status');
+  assert.deepEqual(findingStatus?.values, ['backlog', 'ready', 'in_progress', 'done', 'wont_fix']);
+  assert.match(findingStatus?.description ?? '', /ready.*supporting Evidence/);
+  const provider = findings.subcommands.push.options.find(option => option.name === 'provider');
+  assert.deepEqual(provider?.values, ['auto', 'github', 'linear']);
+  assert.match(provider?.description ?? '', /dashboard-configured selection/);
+  assert.equal(findings.subcommands.get.positionals.at(-1)?.name, 'findingRef');
+
+  const study = surface.commands.find(command => command.name === 'study');
+  assert.ok(study && study.kind === 'group');
+  const studyStatus = study.subcommands.update.options.find(option => option.name === 'status');
+  assert.deepEqual(studyStatus?.values, ['draft', 'active', 'paused', 'closed']);
+  assert.match(study.subcommands['validate-script'].description, /existing Study/);
+  assert.match(
+    study.subcommands.create.options.find(option => option.name === 'activate')?.description ?? '',
+    /begin matching eligible participants/,
+  );
 
   const knowledge = surface.commands.find(command => command.name === 'knowledge');
   assert.ok(knowledge && knowledge.kind === 'group');
@@ -69,6 +86,7 @@ test('nested human and JSON help share descriptions, required inputs, and aliase
 
   const interview = surface.commands.find(command => command.name === 'interview');
   assert.ok(interview && interview.kind === 'group');
+  assert.doesNotMatch(interview.description, /export/);
   assert.ok(!('end' in interview.subcommands));
   assert.ok(!('forensics' in interview.subcommands));
 });
@@ -82,6 +100,11 @@ test('registry projection exposes dry-run for every registered command', () => {
   assert.equal(interview.subcommands.list.dryRunSupported, true);
   assert.equal(interview.subcommands.delete.destructive, true);
   assert.equal(interview.subcommands.delete.dryRunSupported, true);
+
+  const evidence = surface.commands.find(command => command.name === 'evidence');
+  assert.ok(evidence && evidence.kind === 'group');
+  assert.equal(evidence.subcommands['coverage-gaps'].operation, 'read');
+  assert.equal(evidence.subcommands['case-file'].operation, 'read');
 
   const knowledge = surface.commands.find(command => command.name === 'knowledge');
   assert.ok(knowledge && knowledge.kind === 'group');
@@ -111,10 +134,14 @@ test('registry validation consumes the same required options and aliases as help
     'apply',
     parseArgs(['--data', '@knowledge.json']),
   ));
-  assert.doesNotThrow(() => validateCommandInput('work', 'update', parseArgs(['tsk_1', '--effort', 'm'])));
+  assert.doesNotThrow(() => validateCommandInput('findings', 'update', parseArgs(['tsk_1', '--effort', 'm'])));
   assert.throws(
-    () => validateCommandInput('work', 'update', parseArgs(['tsk_1', '--effort', 'medium'])),
+    () => validateCommandInput('findings', 'update', parseArgs(['tsk_1', '--effort', 'medium'])),
     /Invalid value "medium" for --effort\. Expected one of: xs, s, m, l, xl/,
+  );
+  assert.throws(
+    () => validateCommandInput('findings', 'update', parseArgs(['fnd_1', '--status', 'reviewed'])),
+    /Invalid value "reviewed" for --status\. Expected one of: backlog, ready, in_progress, done, wont_fix/,
   );
   assert.doesNotThrow(() => validateCommandInput('init', undefined, parseArgs(['-y'])));
   assert.throws(
@@ -135,9 +162,13 @@ test('shell completions derive nested commands, option aliases, and descriptions
   assert.match(bash, /interview/);
   assert.match(bash, /watch/);
   assert.match(bash, /--evidence/);
+  assert.match(bash, /findings/);
+  assert.doesNotMatch(bash, /\bwork\b/);
   assert.match(bash, /-y/);
   assert.match(fish, /Watch processing progress\./);
-  assert.match(fish, /Include extracted evidence in the watch output\./);
+  assert.match(fish, /Include newly extracted Evidence while watching processing\./);
+  assert.match(fish, /findings/);
+  assert.doesNotMatch(fish, /\bwork\b/);
   assert.match(fish, /-s y/);
 });
 

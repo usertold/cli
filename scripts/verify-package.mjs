@@ -33,7 +33,45 @@ try {
   if (manifest.name !== 'usertold' || manifest.license !== 'Apache-2.0') {
     throw new Error('Package identity or license is incorrect');
   }
-  console.log(`Verified ${filename}: ${entries.length} files`);
+
+  const installRoot = path.join(temp, 'install');
+  execFileSync('npm', [
+    'install', '--prefix', installRoot, '--ignore-scripts', '--no-audit', '--no-fund', tarball,
+  ], { encoding: 'utf8', stdio: 'pipe' });
+  const executable = path.join(installRoot, 'node_modules', '.bin', 'usertold');
+  const rootHelp = JSON.parse(execFileSync(executable, ['--help', '--json'], { encoding: 'utf8' }));
+  if (rootHelp.version !== manifest.version) {
+    throw new Error(`Packed CLI JSON help version ${rootHelp.version} differs from package ${manifest.version}`);
+  }
+  const commandNames = rootHelp.commands.map(command => command.name);
+  if (!commandNames.includes('findings') || commandNames.includes('work')) {
+    throw new Error('Packed CLI must expose findings without a work alias');
+  }
+
+  const findingsHelp = JSON.parse(execFileSync(executable, ['findings', '--help', '--json'], { encoding: 'utf8' }));
+  const findingSubcommands = Object.keys(findingsHelp.subcommands);
+  const expectedFindingSubcommands = [
+    'list', 'get', 'create', 'create-from-evidence', 'update', 'delete', 'push', 'push-status',
+  ];
+  if (JSON.stringify(findingSubcommands) !== JSON.stringify(expectedFindingSubcommands)) {
+    throw new Error(`Packed CLI findings subcommands differ: ${findingSubcommands.join(', ')}`);
+  }
+  const findingStatuses = findingsHelp.subcommands.update.options
+    .find(option => option.name === 'status')?.values;
+  if (JSON.stringify(findingStatuses) !== JSON.stringify(['backlog', 'ready', 'in_progress', 'done', 'wont_fix'])) {
+    throw new Error('Packed CLI Findings help is missing its public lifecycle values');
+  }
+  const providerHelp = findingsHelp.subcommands.push.options.find(option => option.name === 'provider');
+  if (!providerHelp?.description.includes('dashboard-configured selection')) {
+    throw new Error('Packed CLI Findings help does not explain default provider selection');
+  }
+
+  const findingsListHelp = execFileSync(executable, ['findings', 'list', '--help'], { encoding: 'utf8' });
+  if (!findingsListHelp.includes('usertold findings list') || findingsListHelp.includes('usertold work list')) {
+    throw new Error('Packed CLI Findings help does not match the registered command');
+  }
+
+  console.log(`Verified and smoke-tested ${filename}: ${entries.length} files`);
 } finally {
   await rm(temp, { recursive: true, force: true });
 }

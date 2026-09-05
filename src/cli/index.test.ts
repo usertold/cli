@@ -39,7 +39,7 @@ test('help command displays command groups', async () => {
     'project',
     'interview',
     'evidence',
-    'work',
+    'findings',
     'intake',
     'study',
     'billing',
@@ -68,6 +68,8 @@ test('json help exposes the registered command hierarchy', async () => {
   };
   assert.equal(rootPayload.usage, 'usertold <group> <subcommand> [options]');
   assert.ok(rootPayload.commands.some(command => command.name === 'evidence' && command.kind === 'group'));
+  assert.ok(rootPayload.commands.some(command => command.name === 'findings' && command.kind === 'group'));
+  assert.ok(!rootPayload.commands.some(command => command.name === 'work'));
   assert.ok(!rootPayload.commands.some(command => command.name === 'setup'));
   assert.ok(!rootPayload.commands.some(command => command.name === 'introspect'));
 
@@ -96,6 +98,13 @@ test('removed internal commands are rejected without leaking help', async () => 
     assert.equal(result.stdout, '');
     assert.match(result.stderr, /Unknown command/);
   }
+});
+
+test('removed work command is rejected without a compatibility alias', async () => {
+  const result = await runCli(['work', '--help', '--json'], process.cwd());
+  assert.notEqual(result.code, 0);
+  assert.equal(result.stdout, '');
+  assert.match(result.stderr, /Unknown command: work/);
 });
 
 test('subcommand help displays focused human-readable command details', async () => {
