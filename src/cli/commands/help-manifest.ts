@@ -3,8 +3,7 @@ import { WORK_EFFORT_ESTIMATES } from '../../shared/task-effort';
 import { parseEnvironment, UnknownFlagsError } from '../lib/args';
 import { failArgs } from '../lib/errors';
 import { COMMAND_REGISTRY, type RegistryLeaf, type RegistryOptionRef } from './command-registry';
-
-const CLI_VERSION = '__USERTOLD_CLI_VERSION__';
+import { CLI_VERSION } from '../lib/version';
 
 
 export type CommandSurface = {
@@ -96,7 +95,7 @@ const OPTION_CATALOG: Record<string, OptionMetadata> = {
   "env": { description: "Select the UserTold environment.", type: 'enum', values: ["production","stage","local"], default: "production" },
   "events": { description: "Path to a session events file for added context.", type: 'string' },
   "external": { description: "Include reconciliation against the external billing provider.", type: 'boolean' },
-  "evidence": { description: "Comma-separated evidence IDs.", type: 'string' },
+  "evidence": { description: "Comma-separated Evidence references.", type: 'string' },
   "format": { description: "Output format. Use \"json\" for structured output.", type: 'enum', values: ["json"] },
   "goals": { description: "Study goals JSON or @file.", type: 'json' },
   "grant-id": { description: "Idempotency key for the credit grant.", type: 'string' },
@@ -167,7 +166,7 @@ const OPTION_CATALOG: Record<string, OptionMetadata> = {
   "video-content-type": { description: "MIME type for the separate video upload.", type: 'string' },
   "wait": { description: "Wait for background processing to finish.", type: 'boolean' },
   "welcome-message": { description: "Welcome message shown to participants.", type: 'string' },
-  "finding": { description: "Finding ID filter.", type: 'string' },
+  "finding": { description: "Finding reference filter.", type: 'string' },
   "yes": { description: "Skip prompts and run non-interactively.", type: 'boolean' },
 };
 

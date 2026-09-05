@@ -6,32 +6,60 @@ Canonical Findings responses use that vocabulary directly. Older internal nouns
 remain only in API families that have not yet moved to canonical DTOs, where the
 CLI remaps deliberate top-level output keys.
 
+## Research-to-triage workflow
+
+The customer workflow crosses six deliberate phases:
+
+1. Create or select a Project, install its widget once, and verify the intended page.
+2. Create a draft Study, review its script and placement, then explicitly activate it.
+3. Follow completed Interviews through processing and inspect transcript, timeline, and capture limitations.
+4. Review extracted Evidence, including counter-evidence and coverage gaps.
+5. Review server-suggested draft Findings or deliberately create one from selected unlinked Evidence.
+6. Mark a verified Finding `ready`, then explicitly send it to the configured product-triage provider.
+
+The service owns Interview processing, Evidence extraction, and draft Finding
+suggestions. The CLI transports and presents those records; it does not embed the
+private extraction or prioritization engine.
+
+Finding lifecycle values accepted by `findings list --status` and
+`findings update --status` are `backlog`, `ready`, `in_progress`, `done`, and
+`wont_fix`. `ready` means reviewed and not yet sent. The canonical API represents
+these as separate research and delivery states, but the CLI retains this compact
+public lifecycle for 3.0.0.
+
+`findings push` omits provider selection by default so the service can use the
+Project's dashboard configuration. `--provider auto` is equivalent; `github` and
+`linear` explicitly override the configured selection.
+
 ## MCP is the focused agent loop
 
 The public MCP server deliberately exposes the smallest complete
-research-to-triage loop. Each MCP tool has a direct CLI counterpart:
+research-to-triage loop. The closest CLI paths are:
 
 | MCP tool | CLI counterpart |
 | --- | --- |
 | `projects.create` | `project create` |
 | `projects.get_widget_setup` | `project snippet` |
 | `projects.verify_widget_installation` | `project verify-widget-installation` |
-| `studies.validate_script` | `study validate-script` |
+| `studies.validate_script` | `study validate-script` for an existing Study; MCP also validates standalone drafts |
 | `studies.list` | `study list` |
 | `studies.get` | `study get` |
 | `studies.create` | `study create` |
 | `studies.update` | `study update` |
+| `studies.get_results` | `interview list`, `evidence list`, and `findings list` |
 | `interviews.list` | `interview list` |
 | `interviews.get_context` | `interview get`, `interview transcript`, `interview timeline` |
+| `interviews.get_artifacts` | `interview transcript`, `interview media`, `interview audio`, `interview screen` |
 | `interviews.processing_status` | `interview status` |
 | `interviews.retry_processing` | `interview reprocess` |
 | `evidence.list` | `evidence list` |
 | `evidence.get` | `evidence get` |
+| `evidence.update` | `evidence annotate`, `evidence dismiss`, `evidence undismiss` |
 | `findings.list` | `findings list` |
 | `findings.get_evidence` | `findings get` (includes linked Evidence) |
 | `findings.create_from_evidence` | `findings create-from-evidence` |
 | `findings.update` | `findings update` |
-| `findings.push` | `findings push` |
+| `findings.send` | `findings push` |
 
 ## CLI is the complete customer workspace client
 

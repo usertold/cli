@@ -20,11 +20,7 @@ import { buildHelpPayload, findCommand, findCommandLeaf, renderCommandHelp, rend
 import { handleCompletionsCommand } from './commands/completions';
 import { printDryRunPlan } from './commands/dry-run';
 import { runWithDryRunProtection } from './lib/dry-run';
-
-declare const __USERTOLD_PUBLIC_CLI_VERSION__: string;
-const CLI_VERSION = typeof __USERTOLD_PUBLIC_CLI_VERSION__ === 'string'
-  ? __USERTOLD_PUBLIC_CLI_VERSION__
-  : '0.0.0-dev';
+import { CLI_VERSION } from './lib/version';
 
 function detectJsonMode(): boolean {
   const argv = process.argv.slice(2);

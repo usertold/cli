@@ -145,7 +145,7 @@ test('dry-run resolves default-project resource arguments like normal execution'
     const result = await runCli(['findings', 'delete', 'tsk_1', '--dry-run', '--json'], env);
     assert.equal(result.code, 0, result.stderr);
     const plan = JSON.parse(result.stdout) as { arguments: Record<string, string> };
-    assert.deepEqual(plan.arguments, { projectRef: 'acme/checkout', findingId: 'tsk_1' });
+    assert.deepEqual(plan.arguments, { projectRef: 'acme/checkout', findingRef: 'tsk_1' });
 
     const separateMedia = await runCli([
       'interview', 'upload-video', '--audio', 'audio.wav', '--dry-run', '--json',

@@ -11,6 +11,8 @@ The complete pre-open-source 1.x package history is preserved in
 - Renamed the Evidence list's entity filter from `--work` to `--finding` and updated Finding positional labels in machine-readable help.
 - Moved every `findings` command to the canonical `/findings/...` API and its Finding request and response DTOs; opaque Finding references remain pass-through values.
 - Let `findings push` delegate omitted or `--provider auto` provider selection to the dashboard configuration while retaining explicit `linear` and `github` overrides.
+- Documented the complete Study-to-Finding workflow and made Study activation, Finding lifecycle values, provider defaults, and read-only command metadata explicit in human and JSON help.
+- Fixed the packaged JSON help and HTTP User-Agent to report the same `3.0.0` version as `usertold --version`.
 - Defined a Finding as an Evidence-backed synthesis that can be reviewed and sent to product triage; it is not automatically a task, solution, roadmap commitment, or delivery issue.
 
 This is a major release because the command-group rename and JSON-key rename are intentionally breaking. Existing 2.x installations remain compatible with the retained server API.

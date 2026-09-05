@@ -2,7 +2,7 @@
 
 The open-source command-line client for [UserTold.ai](https://usertold.ai).
 
-UserTold runs a voice interview when a real user gets stuck, in the same session, so the quote, screen, and page path stay together. This CLI lets you and your coding agent review source-linked Evidence, synthesize it into Findings, and send reviewed Findings to product triage.
+UserTold runs consented in-product interviews and keeps participant voice, transcript, and page context connected to the same research record, together with screen capture when a participant approves it on a supported desktop browser. This CLI lets you and your coding agent review source-linked Evidence, synthesize it into Findings, and send reviewed Findings to product triage.
 
 ## Install
 
@@ -13,23 +13,60 @@ usertold auth login
 
 Node.js 20 or newer is required.
 
-## Start
+## Research-to-triage workflow
+
+The service captures and processes Interviews, extracts source-linked Evidence,
+and may suggest draft Findings. The CLI is the review and delivery surface; it
+does not perform local extraction or silently decide that a Finding is ready.
 
 ```bash
-# See and manage the workspaces available to you
+# Find and select the Project used by later commands
 usertold organization list
 usertold project list
-
-# Select a default project for later commands
 usertold project use acme/checkout
 
-# Review interviews and source-linked evidence
-usertold interview list
-usertold evidence list
+# Create a draft Study, review its proposed script, then save it
+usertold study create --title "Checkout usability" --handle checkout-usability --visibility @visibility.json
+usertold study validate-script checkout-usability --script @study-script.json
+usertold study update checkout-usability --script @study-script.json
 
-# Inspect Evidence-backed Findings before product triage
-usertold findings list
+# Install the Project widget once and verify the target page
+usertold project snippet
+usertold project verify-widget-installation --url https://example.com/checkout
+usertold study resolve --path /checkout
+
+# Activation begins matching eligible participants
+usertold study update checkout-usability --status active
+
+# Follow one Interview through processing
+usertold interview list --study checkout-usability
+usertold interview watch int_123 --evidence
+
+# Inspect the participant record and extracted Evidence
+usertold interview transcript int_123
+usertold interview enriched-timeline int_123
+usertold evidence list --interview int_123
+
+# Review suggested Findings and their supporting Evidence
+usertold findings list --interview int_123
+usertold findings get fnd_123
+
+# After review, mark the Finding ready and send it
+usertold findings update fnd_123 --status ready --priority 80 --effort m
+usertold findings push fnd_123
+usertold findings push-status fnd_123
 ```
+
+Use `findings create-from-evidence` only when selected Evidence is genuinely
+unlinked or needs deliberate regrouping. Review the underlying Interview and
+Evidence before moving a Finding to `ready`. `findings push` uses the delivery
+provider configured in the dashboard; `--provider github` or `--provider linear`
+is an explicit override.
+
+`usertold init` is the fast bootstrap path. When it creates a Study, it also
+creates its Intake, enables all-page Visibility, and activates both resources.
+Use the explicit commands above when you want to inspect placement and scripts
+before collection begins.
 
 Every command supports human-readable help. Agents and scripts can inspect the same command model as JSON:
 
@@ -58,7 +95,7 @@ Use `--json` for machine-readable command output and `--dry-run` to inspect supp
 | `integration` | Install, inspect, configure, verify, and disconnect GitHub or Linear delivery |
 | `billing` | Read usage and billing status |
 | `export` | Request and download your account data export |
-| `init` | Bootstrap a Project and Study |
+| `init` | Bootstrap a Project and optionally create and activate an all-pages Study with its Intake |
 | `completions` | Generate shell completions |
 
 The installed version's `usertold --help` is authoritative. See

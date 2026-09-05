@@ -40,6 +40,9 @@ try {
   ], { encoding: 'utf8', stdio: 'pipe' });
   const executable = path.join(installRoot, 'node_modules', '.bin', 'usertold');
   const rootHelp = JSON.parse(execFileSync(executable, ['--help', '--json'], { encoding: 'utf8' }));
+  if (rootHelp.version !== manifest.version) {
+    throw new Error(`Packed CLI JSON help version ${rootHelp.version} differs from package ${manifest.version}`);
+  }
   const commandNames = rootHelp.commands.map(command => command.name);
   if (!commandNames.includes('findings') || commandNames.includes('work')) {
     throw new Error('Packed CLI must expose findings without a work alias');
@@ -52,6 +55,15 @@ try {
   ];
   if (JSON.stringify(findingSubcommands) !== JSON.stringify(expectedFindingSubcommands)) {
     throw new Error(`Packed CLI findings subcommands differ: ${findingSubcommands.join(', ')}`);
+  }
+  const findingStatuses = findingsHelp.subcommands.update.options
+    .find(option => option.name === 'status')?.values;
+  if (JSON.stringify(findingStatuses) !== JSON.stringify(['backlog', 'ready', 'in_progress', 'done', 'wont_fix'])) {
+    throw new Error('Packed CLI Findings help is missing its public lifecycle values');
+  }
+  const providerHelp = findingsHelp.subcommands.push.options.find(option => option.name === 'provider');
+  if (!providerHelp?.description.includes('dashboard-configured selection')) {
+    throw new Error('Packed CLI Findings help does not explain default provider selection');
   }
 
   const findingsListHelp = execFileSync(executable, ['findings', 'list', '--help'], { encoding: 'utf8' });
