@@ -3,6 +3,14 @@
 The complete pre-open-source 1.x package history is preserved in
 [`docs/RELEASE_NOTES_1X.md`](docs/RELEASE_NOTES_1X.md).
 
+## 3.0.1 — 2026-09-08
+
+### A smaller standalone CLI
+
+- Removed Zod from the published runtime dependencies and executable bundle.
+- Kept focused validation for knowledge actions, media uploads, placement inputs, and API route construction without loading the service's schema catalog at runtime.
+- Added package gates that reject future Zod runtime dependencies or bundle inputs.
+
 ## 3.0.0 — 2026-09-05
 
 ### A simpler model from research to product decisions

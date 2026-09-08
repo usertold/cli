@@ -31,7 +31,7 @@ import {
 import {
   getImportedMediaKind,
   MAX_IMPORTED_MEDIA_BYTES,
-} from '../../shared/media-processing-contract';
+} from '../../shared/imported-media';
 
 function projectApi(projectRef: string): string {
   return buildProjectApiPathFromRef(projectRef, '', '<projectRef>');

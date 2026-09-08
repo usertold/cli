@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
@@ -11,6 +11,9 @@ try {
   const [{ filename }] = JSON.parse(output);
   const tarball = path.join(temp, filename);
   const entries = execFileSync('tar', ['-tf', tarball], { encoding: 'utf8' }).trim().split('\n');
+  const manifest = JSON.parse(execFileSync('tar', ['-xOf', tarball, 'package/package.json'], {
+    encoding: 'utf8',
+  }));
   const required = [
     'package/package.json',
     'package/README.md',
@@ -29,9 +32,17 @@ try {
   if (entries.some(entry => entry.startsWith('package/src/') || entry.includes('/scripts/'))) {
     throw new Error('Package includes development or private source files');
   }
-  const manifest = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
   if (manifest.name !== 'usertold' || manifest.license !== 'Apache-2.0') {
     throw new Error('Package identity or license is incorrect');
+  }
+  for (const field of ['dependencies', 'optionalDependencies', 'peerDependencies']) {
+    if (manifest[field]?.zod) {
+      throw new Error(`Published CLI must not declare Zod in ${field}`);
+    }
+  }
+  const bundledDependencies = manifest.bundledDependencies ?? manifest.bundleDependencies ?? [];
+  if (bundledDependencies.includes('zod')) {
+    throw new Error('Published CLI must not bundle Zod as a package dependency');
   }
 
   const installRoot = path.join(temp, 'install');
