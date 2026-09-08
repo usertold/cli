@@ -13,7 +13,7 @@ import { requestProjectContractJson } from '../lib/contract-api';
 import { isJsonOutput, printOutput } from '../lib/output';
 import { extractMarkdownH2Section, listMarkdownH2Headings, loadStudyDesignGuideMarkdown } from '../lib/study-guide';
 import { consumeProjectRef } from '../lib/project-defaults';
-import { normalizePlacementLanguage, normalizeVisibilityPathname } from '../../shared/study-placement';
+import { normalizePlacementLanguage, normalizeVisibilityPathname } from '../../shared/placement-normalization';
 import { printCommandHelp } from './help-manifest';
 
 export async function handleStudyCommand(subcommand: string | undefined, parsed: ParsedArgs): Promise<void> {

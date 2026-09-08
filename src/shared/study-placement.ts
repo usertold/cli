@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { pickWidgetLocale, SUPPORTED_WIDGET_LOCALES, type WidgetLocale } from './widget-locales';
+import { SUPPORTED_WIDGET_LOCALES, type WidgetLocale } from './widget-locales';
 import {
   INVITATION_CORNERS,
   INVITATION_ICONS,
@@ -9,7 +9,9 @@ import {
 } from './study-invitation';
 import { generateEntityId } from './id';
 import { validateAllowedOrigins } from './allowed-origins';
+import { normalizePlacementLanguage, normalizeVisibilityPathname } from './placement-normalization';
 export { DEFAULT_STUDY_INVITATION, INVITATION_CORNERS, INVITATION_ICONS, INVITATION_PRESENTATION_MODES, INVITATION_REWARD_KINDS, type StudyInvitation } from './study-invitation';
+export { normalizePlacementLanguage, normalizeVisibilityPathname } from './placement-normalization';
 
 export const VISIBILITY_MATCHES = ['exact', 'subtree'] as const;
 export const VISIBILITY_EFFECTS = ['include', 'exclude'] as const;
@@ -164,23 +166,6 @@ export interface StudyPlacementWinnerContext {
 
 const MAX_PLACEMENT_PATHNAME_LENGTH = 2_000;
 const PLACEMENT_PROBE_SEGMENT_ALPHABET = "!$%&'()*+,-.0123456789:;=@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]_abcdefghijklmnopqrstuvwxyz|~";
-
-export function normalizeVisibilityPathname(value: string): string {
-  const trimmed = value.trim();
-  let pathname = trimmed;
-  try {
-    pathname = new URL(trimmed, 'https://placement.invalid').pathname;
-  } catch {
-    pathname = trimmed.split(/[?#]/, 1)[0];
-  }
-  pathname = `/${pathname}`.replace(/\/{2,}/g, '/');
-  if (pathname.length > 1) pathname = pathname.replace(/\/+$/, '');
-  return pathname;
-}
-
-export function normalizePlacementLanguage(value: string | null | undefined): string | null {
-  return pickWidgetLocale(value);
-}
 
 export function pathnameMatches(rulePathname: string, pathname: string, match: 'exact' | 'subtree'): boolean {
   const rule = normalizeVisibilityPathname(rulePathname);

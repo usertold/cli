@@ -1,4 +1,3 @@
-import { z } from 'zod';
 import { isSupportedTranscriptionMediaMimeType } from './media-mime';
 
 export const MAX_CUSTOM_MEDIA_UPLOAD_BYTES = 25 * 1024 * 1024;
@@ -8,12 +7,10 @@ export const MAX_CUSTOM_PLAYBACK_VIDEO_UPLOAD_BYTES = 100 * 1024 * 1024;
 
 export type CustomMediaUploadKind = 'audio' | 'video';
 
-export const CustomVideoUploadMetadataSchema = z.object({
-  sizeBytes: z.number().int().nonnegative(),
-  contentType: z.string(),
-});
-
-export type CustomVideoUploadMetadata = z.infer<typeof CustomVideoUploadMetadataSchema>;
+export interface CustomVideoUploadMetadata {
+  sizeBytes: number;
+  contentType: string;
+}
 
 export function validateCustomVideoUploadMetadata(input: CustomVideoUploadMetadata): string | null {
   return validateCustomMediaUploadMetadata(input, { expectedKind: null, maxBytes: MAX_CUSTOM_MEDIA_UPLOAD_BYTES });
@@ -31,22 +28,23 @@ function validateCustomMediaUploadMetadata(
   input: CustomVideoUploadMetadata,
   options: { expectedKind: CustomMediaUploadKind | null; maxBytes: number },
 ): string | null {
-  const metadata = CustomVideoUploadMetadataSchema.safeParse(input);
-  if (!metadata.success) {
+  if (!input || typeof input !== 'object'
+    || !Number.isInteger(input.sizeBytes) || input.sizeBytes < 0
+    || typeof input.contentType !== 'string') {
     return 'Invalid media upload metadata';
   }
 
-  if (metadata.data.sizeBytes === 0) {
+  if (input.sizeBytes === 0) {
     return options.expectedKind ? `${options.expectedKind} file is empty` : 'media file is empty';
   }
 
-  if (metadata.data.sizeBytes > options.maxBytes) {
+  if (input.sizeBytes > options.maxBytes) {
     const maxMb = options.maxBytes / (1024 * 1024);
     const label = options.expectedKind === 'video' ? 'Video' : options.expectedKind === 'audio' ? 'Audio' : 'Recording';
     return `${label} exceeds the ${maxMb}MB upload limit`;
   }
 
-  const contentType = metadata.data.contentType || 'application/octet-stream';
+  const contentType = input.contentType || 'application/octet-stream';
   const kind = getCustomMediaUploadKind(contentType);
   if (!kind) {
     return 'Upload a supported audio or video file: mp3, m4a, wav, ogg, flac, aac, mp4, webm, or mpeg';

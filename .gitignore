@@ -1,4 +1,5 @@
 node_modules/
 dist/
+src/cli/lib/api-routes.generated.ts
 *.tgz
 .DS_Store

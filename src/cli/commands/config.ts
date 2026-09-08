@@ -5,7 +5,7 @@ import { requestProjectContract } from '../lib/contract-api';
 import { fail } from '../lib/errors';
 import { printOutput } from '../lib/output';
 import { consumeProjectRef } from '../lib/project-defaults';
-import { ApiKnowledgeActionConfigInputSchema } from '../../shared/api-types';
+import { validateKnowledgeActionInput } from '../lib/knowledge-action';
 import { printCommandHelp } from './help-manifest';
 
 export async function handleKnowledgeCommand(subcommand: string | undefined, parsed: ParsedArgs): Promise<void> {
@@ -38,9 +38,9 @@ export async function handleKnowledgeCommand(subcommand: string | undefined, par
         commandLabel: 'knowledge apply',
       });
       const raw = await parseJsonOrFile(requireOption(parsed, 'data'), '--data');
-      const validated = ApiKnowledgeActionConfigInputSchema.safeParse(raw);
+      const validated = validateKnowledgeActionInput(raw);
       if (!validated.success) {
-        fail(`Invalid knowledge action: ${validated.error.issues.map((issue) => issue.message).join('; ')}`);
+        fail(`Invalid knowledge action: ${validated.issues.join('; ')}`);
       }
       const data = await requestProjectContract({
         env,
@@ -78,9 +78,9 @@ export async function handleKnowledgeCommand(subcommand: string | undefined, par
         : undefined;
       const validatedDraft = draftInput === undefined
         ? undefined
-        : ApiKnowledgeActionConfigInputSchema.safeParse(draftInput);
+        : validateKnowledgeActionInput(draftInput);
       if (validatedDraft && !validatedDraft.success) {
-        fail(`Invalid knowledge action: ${validatedDraft.error.issues.map((issue) => issue.message).join('; ')}`);
+        fail(`Invalid knowledge action: ${validatedDraft.issues.join('; ')}`);
       }
       const data = await requestProjectContract({
         env,

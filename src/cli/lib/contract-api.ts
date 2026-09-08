@@ -1,13 +1,12 @@
-import {
-  buildDashboardApiPath,
-  dashboardApiContracts,
-  type DashboardApiContractEntry,
-  type DashboardApiContractKey,
-  type DashboardApiPathParams,
-  type DashboardApiQuery,
-  type DashboardApiRequestBody,
-  type DashboardApiResponse,
+import type {
+  DashboardApiContractEntry,
+  DashboardApiContractKey,
+  DashboardApiPathParams,
+  DashboardApiQuery,
+  DashboardApiRequestBody,
+  DashboardApiResponse,
 } from '../../shared/api-contracts';
+import { buildCliApiPath, cliApiRoutes } from './api-routes';
 import type { AuthMode, RequestRetryOptions } from './http';
 import { requestBinary, requestFormDataJson, requestJson, requestText } from './http';
 import { buildProjectApiPathFromRef, requireCanonicalProjectRef } from './project-ref';
@@ -74,7 +73,7 @@ export function createContractApi(defaults: ContractApiDefaults) {
       pathParams?: DashboardApiPathParams<K>,
       query?: DashboardApiQuery<K>,
     ): string {
-      return buildDashboardApiPath(key, pathParams, query);
+      return buildCliApiPath(key, pathParams, query);
     },
 
     request<K extends DashboardApiContractKey>(
@@ -103,7 +102,7 @@ export function createProjectScopedContractApi(
         projectHandle: project.projectHandle,
       } as DashboardApiPathParams<K>;
 
-      return buildDashboardApiPath(key, scopedPathParams, query);
+      return buildCliApiPath(key, scopedPathParams, query);
     },
 
     request<K extends DashboardProjectScopedContractKey>(
@@ -175,8 +174,8 @@ export async function requestContractText<K extends DashboardApiContractKey>(
 ): Promise<string | null> {
   return requestText({
     env: options.env,
-    method: dashboardApiContracts[key].method,
-    path: buildDashboardApiPath(key, options.pathParams, options.query),
+    method: cliApiRoutes[key].method,
+    path: buildCliApiPath(key, options.pathParams, options.query),
     authMode: options.authMode,
     projectKey: options.projectKey,
     headers: options.headers,
@@ -189,8 +188,8 @@ export async function requestContractBinary<K extends DashboardApiContractKey>(
 ): Promise<Buffer> {
   return requestBinary({
     env: options.env,
-    method: dashboardApiContracts[key].method,
-    path: buildDashboardApiPath(key, options.pathParams, options.query),
+    method: cliApiRoutes[key].method,
+    path: buildCliApiPath(key, options.pathParams, options.query),
     authMode: options.authMode,
     projectKey: options.projectKey,
     headers: options.headers,
@@ -244,8 +243,8 @@ export async function requestProjectContractFormDataJson<K extends DashboardProj
 
   return requestFormDataJson<DashboardApiResponse<K>>({
     env: options.env,
-    method: dashboardApiContracts[key].method,
-    path: buildDashboardApiPath(key, scopedPathParams, options.query),
+    method: cliApiRoutes[key].method,
+    path: buildCliApiPath(key, scopedPathParams, options.query),
     authMode: options.authMode,
     projectKey: options.projectKey,
     headers: options.headers,
@@ -306,8 +305,8 @@ async function doRequestContract<K extends DashboardApiContractKey>(
 ): Promise<DashboardApiResponse<K>> {
   return requestJson<DashboardApiResponse<K>>({
     env: defaults.env,
-    method: dashboardApiContracts[key].method,
-    path: buildDashboardApiPath(key, options.pathParams, options.query),
+    method: cliApiRoutes[key].method,
+    path: buildCliApiPath(key, options.pathParams, options.query),
     body: options.body,
     authMode: options.authMode ?? defaults.authMode,
     projectKey: options.projectKey ?? defaults.projectKey,
