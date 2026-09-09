@@ -8,6 +8,7 @@ import {
   defaultArtifactFilename,
   downloadArtifactResponse,
   fetchArtifactResponse,
+  parseInterviewArtifactManifest,
   requireAvailableArtifact,
 } from './artifact-download';
 import type { InterviewArtifact, InterviewArtifactManifest } from '../../shared/interview-artifacts';
@@ -106,4 +107,36 @@ test('artifact selection reports explicit availability and MIME-derived extensio
   assert.equal(defaultArtifactFilename('audio', 'audio/mpeg'), 'interview-audio.mp3');
   assert.equal(defaultArtifactFilename('screen', 'video/mp4'), 'interview-screen.mp4');
   assert.equal(defaultArtifactFilename('events', 'application/x-ndjson'), 'interview-events.jsonl');
+});
+
+test('manifest validation rejects unsafe links, duplicate kinds, and incomplete available entries', () => {
+  const complete: InterviewArtifactManifest = {
+    interviewRef: 'int_1',
+    artifacts: [
+      { ...availableAudio, kind: 'transcript_text', mimeType: 'text/plain' },
+      { ...availableAudio, kind: 'transcript_vtt', mimeType: 'text/vtt' },
+      availableAudio,
+      { ...availableAudio, kind: 'screen', mimeType: 'video/mp4' },
+      { ...availableAudio, kind: 'events', mimeType: 'application/x-ndjson' },
+    ],
+  };
+  assert.deepEqual(parseInterviewArtifactManifest(complete), complete);
+  assert.throws(
+    () => parseInterviewArtifactManifest({
+      ...complete,
+      artifacts: complete.artifacts.map((item, index) => index === 0 ? { ...item, downloadUrl: 'file:///etc/passwd' } : item),
+    }),
+    /invalid/,
+  );
+  assert.throws(
+    () => parseInterviewArtifactManifest({ ...complete, artifacts: complete.artifacts.map(item => ({ ...item, kind: 'audio' })) }),
+    /duplicate audio/,
+  );
+  assert.throws(
+    () => parseInterviewArtifactManifest({
+      ...complete,
+      artifacts: complete.artifacts.map((item, index) => index === 0 ? { ...item, downloadUrl: null } : item),
+    }),
+    /missing its download link or expiry/,
+  );
 });

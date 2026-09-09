@@ -5,10 +5,13 @@ import { randomUUID } from 'node:crypto';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import type { ReadableStream } from 'node:stream/web';
-import type {
-  InterviewArtifact,
-  InterviewArtifactKind,
-  InterviewArtifactManifest,
+import {
+  INTERVIEW_ARTIFACT_AVAILABILITIES,
+  INTERVIEW_ARTIFACT_KINDS,
+  type InterviewArtifactAvailability,
+  type InterviewArtifact,
+  type InterviewArtifactKind,
+  type InterviewArtifactManifest,
 } from '../../shared/interview-artifacts';
 import { buildCliUserAgent } from './user-agent';
 import { CliError } from './errors';
@@ -21,6 +24,44 @@ export class ArtifactDownloadHttpError extends CliError {
     this.name = 'ArtifactDownloadHttpError';
     this.status = status;
   }
+}
+
+export function parseInterviewArtifactManifest(value: unknown): InterviewArtifactManifest {
+  if (!isRecord(value) || typeof value.interviewRef !== 'string' || !Array.isArray(value.artifacts)) {
+    throw new CliError('Artifact manifest response is invalid.');
+  }
+  if (value.artifacts.length !== INTERVIEW_ARTIFACT_KINDS.length) {
+    throw new CliError(`Artifact manifest must contain ${INTERVIEW_ARTIFACT_KINDS.length} artifacts.`);
+  }
+
+  const seen = new Set<InterviewArtifactKind>();
+  const artifacts = value.artifacts.map((candidate): InterviewArtifact => {
+    if (!isRecord(candidate)
+      || !isArtifactKind(candidate.kind)
+      || !isArtifactAvailability(candidate.availability)
+      || !(candidate.mimeType === null || typeof candidate.mimeType === 'string')
+      || !(candidate.sizeBytes === null || (Number.isSafeInteger(candidate.sizeBytes) && Number(candidate.sizeBytes) >= 0))
+      || !(candidate.downloadUrl === null || isSafeDownloadUrl(candidate.downloadUrl))
+      || !(candidate.expiresAt === null || isTimestamp(candidate.expiresAt))) {
+      throw new CliError('Artifact manifest response is invalid.');
+    }
+    if (seen.has(candidate.kind)) {
+      throw new CliError(`Artifact manifest contains duplicate ${candidate.kind} entries.`);
+    }
+    seen.add(candidate.kind);
+    if (candidate.availability === 'available' && (!candidate.downloadUrl || !candidate.expiresAt)) {
+      throw new CliError(`Available artifact ${candidate.kind} is missing its download link or expiry.`);
+    }
+    if (candidate.availability !== 'available' && (candidate.downloadUrl !== null || candidate.expiresAt !== null)) {
+      throw new CliError(`Unavailable artifact ${candidate.kind} unexpectedly includes a download link.`);
+    }
+    return candidate as InterviewArtifact;
+  });
+
+  for (const kind of INTERVIEW_ARTIFACT_KINDS) {
+    if (!seen.has(kind)) throw new CliError(`Artifact manifest did not include ${kind}.`);
+  }
+  return { interviewRef: value.interviewRef, artifacts };
 }
 
 export function findArtifact(
@@ -161,4 +202,30 @@ function extensionForMimeType(mimeType: string | null, fallback: string): string
 
 function formatAvailability(availability: InterviewArtifact['availability']): string {
   return availability.replaceAll('_', ' ');
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isArtifactKind(value: unknown): value is InterviewArtifactKind {
+  return typeof value === 'string' && (INTERVIEW_ARTIFACT_KINDS as readonly string[]).includes(value);
+}
+
+function isArtifactAvailability(value: unknown): value is InterviewArtifactAvailability {
+  return typeof value === 'string' && (INTERVIEW_ARTIFACT_AVAILABILITIES as readonly string[]).includes(value);
+}
+
+function isSafeDownloadUrl(value: unknown): value is string {
+  if (typeof value !== 'string') return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' || url.protocol === 'http:';
+  } catch {
+    return false;
+  }
+}
+
+function isTimestamp(value: unknown): value is string {
+  return typeof value === 'string' && Number.isFinite(Date.parse(value));
 }

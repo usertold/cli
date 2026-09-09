@@ -40,6 +40,7 @@ import {
   artifactLinkIsExpired,
   downloadArtifactResponse,
   fetchArtifactResponse,
+  parseInterviewArtifactManifest,
   requireAvailableArtifact,
 } from '../lib/artifact-download';
 
@@ -52,11 +53,15 @@ async function loadArtifactManifest(
   projectRef: string,
   interviewRef: string,
 ): Promise<InterviewArtifactManifest> {
-  return requestProjectContractJson('sessionGetArtifacts', {
+  const manifest = parseInterviewArtifactManifest(await requestProjectContractJson('sessionGetArtifacts', {
     env,
     projectRef,
     pathParams: { sessionId: interviewRef },
-  });
+  }));
+  if (manifest.interviewRef !== interviewRef) {
+    fail(`Artifact manifest returned a different interview reference: ${manifest.interviewRef}.`);
+  }
+  return manifest;
 }
 
 async function loadAvailableArtifact(
