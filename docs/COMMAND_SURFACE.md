@@ -1,10 +1,10 @@
-# MCP and CLI command coverage
+# UserTold CLI command guide
 
-UserTold uses one product vocabulary across the dashboard, MCP server, and CLI:
-**Organization**, **Project**, **Study**, **Interview**, **Evidence**, and **Finding**.
-Canonical Findings responses use that vocabulary directly. Older internal nouns
-remain only in API families that have not yet moved to canonical DTOs, where the
-CLI remaps deliberate top-level output keys.
+The CLI follows the same product vocabulary as the UserTold dashboard:
+**Organization**, **Project**, **Study**, **Interview**, **Evidence**, and
+**Finding**. Findings responses use that vocabulary directly. Older internal
+nouns remain only in API families that have not yet moved to the current response
+format, where the CLI remaps deliberate top-level output keys.
 
 ## Research-to-triage workflow
 
@@ -31,40 +31,10 @@ public lifecycle for 3.0.0.
 Project's dashboard configuration. `--provider auto` is equivalent; `github` and
 `linear` explicitly override the configured selection.
 
-## MCP is the focused agent loop
+## Manage the customer workspace
 
-The public MCP server deliberately exposes the smallest complete
-research-to-triage loop. The closest CLI paths are:
-
-| MCP tool | CLI counterpart |
-| --- | --- |
-| `projects.create` | `project create` |
-| `projects.get_widget_setup` | `project snippet` |
-| `projects.verify_widget_installation` | `project verify-widget-installation` |
-| `studies.validate_script` | `study validate-script` for an existing Study; MCP also validates standalone drafts |
-| `studies.list` | `study list` |
-| `studies.get` | `study get` |
-| `studies.create` | `study create` |
-| `studies.update` | `study update` |
-| `studies.get_results` | `interview list`, `evidence list`, and `findings list` |
-| `interviews.list` | `interview list` |
-| `interviews.get_context` | `interview get`, `interview transcript`, `interview timeline` |
-| `interviews.get_artifacts` | `interview artifacts`, `interview artifact`, `interview transcript --raw`, `interview media`, `interview audio`, `interview screen` |
-| `interviews.processing_status` | `interview status` |
-| `interviews.retry_processing` | `interview reprocess` |
-| `evidence.list` | `evidence list` |
-| `evidence.get` | `evidence get` |
-| `evidence.update` | `evidence annotate`, `evidence dismiss`, `evidence undismiss` |
-| `findings.list` | `findings list` |
-| `findings.get_evidence` | `findings get` (includes linked Evidence) |
-| `findings.create_from_evidence` | `findings create-from-evidence` |
-| `findings.update` | `findings update` |
-| `findings.send` | `findings push` |
-
-## CLI is the complete customer workspace client
-
-The CLI includes the MCP loop and the broader operations needed to manage a
-customer workspace without relying on an undocumented endpoint:
+The CLI provides the operations needed to manage a customer workspace without
+relying on undocumented endpoints:
 
 - authentication, identity, Terms acceptance, and short-lived browser sessions;
 - organization creation, participant roles, Project access, and invitations;
@@ -74,12 +44,13 @@ customer workspace without relying on an undocumented endpoint:
   and disconnect; Linear connection status, team selection, and disconnect;
 - billing inspection, account export, bootstrapping, and shell completions.
 
-`interview artifacts` exposes the same five-artifact manifest as MCP: exact TXT
-and VTT transcripts, audio, screen recording, and source events JSONL. Signed
-links expire after five minutes. `interview artifact --download` and the audio
-and screen shortcuts stream directly from artifact storage to an atomic local
-file without forwarding the CLI bearer token. Source event files are transported
-unchanged; the public CLI does not interpret them as a forensic command surface.
+Use `interview artifacts` to see which transcript, audio, screen-recording, and
+source-event files are ready and get temporary download URLs for them. Available
+formats are TXT and VTT for transcripts, the captured media format for recordings,
+and JSONL for source events. Links expire after five minutes. `interview artifact
+--download` and the audio and screen shortcuts save directly to an atomic local
+file without forwarding the CLI bearer token. Source event files are saved
+unchanged; the public CLI does not interpret their contents.
 
 GitHub and Linear authorization must pass through the provider's browser consent
 screen. The CLI prints the correct connection URL and can mint a short-lived

@@ -124,7 +124,7 @@ test('registry projection exposes dry-run for every registered command', () => {
   assert.ok(interview.subcommands.artifact.options.some(option => option.name === 'download'));
   assert.ok(interview.subcommands.artifact.options.some(option => option.name === 'output'));
   assert.match(renderCommandHelp('interview', 'artifact'), /transcript_text, transcript_vtt, audio, screen, or events/);
-  assert.match(renderCommandHelp('interview', 'transcript'), /exact stored transcript bytes/);
+  assert.match(renderCommandHelp('interview', 'transcript'), /original stored transcript/);
   assert.ok(interview.subcommands.watch.options.some(option => option.name === 'evidence' && option.type === 'boolean'));
   assert.ok(interview.subcommands.watch.options.some(option => option.name === 'verbose' && option.type === 'boolean'));
 });

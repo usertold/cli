@@ -48,7 +48,7 @@ usertold interview enriched-timeline int_123
 usertold interview artifacts int_123
 usertold evidence list --interview int_123
 
-# Print one five-minute download URL, or stream the exact artifact to disk
+# Print a temporary download URL, or save the original file to disk
 usertold interview artifact int_123 transcript_text
 usertold interview artifact int_123 transcript_vtt --download
 usertold interview artifact int_123 events --download --output interview-events.jsonl
@@ -84,15 +84,15 @@ usertold evidence list --help --json
 
 Use `--json` for machine-readable command output and `--dry-run` to inspect supported mutations before sending them.
 
-`interview artifacts` reports availability, MIME type, size, expiry, and a
-five-minute signed URL for each authoritative transcript, recording, and source
-events artifact. `interview artifact <interviewId> <kind> --download` streams one
-of those files to disk without loading it all into memory. Downloads are written
-under a temporary name and become visible at the destination only after the
-transfer and expected-size check complete. Existing files are never overwritten.
-The `interview audio` and `interview screen` shortcuts use the same download path.
-`interview transcript --raw` reads the authoritative stored TXT without message
-reconstruction; use `interview get` when message-level inspection is needed.
+`interview artifacts` shows which transcript, recording, and source-event files
+are ready, together with their type, size, expiry, and temporary download URL.
+`interview artifact <interviewId> <kind> --download` saves one of those files
+without loading it all into memory. Downloads are written under a temporary name
+and become visible at the destination only after the transfer and expected-size
+check complete. Existing files are never overwritten. The `interview audio` and
+`interview screen` shortcuts use the same safe download path. `interview
+transcript --raw` prints the original stored TXT without rebuilding it from
+messages; use `interview get` when message-level inspection is needed.
 
 ## Public command surface
 
@@ -114,8 +114,9 @@ reconstruction; use `interview get` when message-level inspection is needed.
 | `init` | Bootstrap a Project and optionally create and activate an all-pages Study with its Intake |
 | `completions` | Generate shell completions |
 
-The installed version's `usertold --help` is authoritative. See
-[MCP and CLI command coverage](docs/COMMAND_SURFACE.md) for the exact vocabulary mapping and customer/operator boundary.
+The installed version's `usertold --help` is the source of truth. See the
+[CLI command guide](docs/COMMAND_SURFACE.md) for the research workflow and the
+customer/operator boundary.
 
 ## Deliberate boundary
 

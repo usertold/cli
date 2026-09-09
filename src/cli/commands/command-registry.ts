@@ -547,7 +547,7 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
         "options": [
           {
             "name": "raw",
-            "description": "Print the exact stored transcript bytes without reconstructing messages."
+            "description": "Print the original stored transcript without rebuilding it from messages."
           }
         ],
         "requiredOptions": [],
@@ -558,7 +558,7 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
         "auth": "required"
       },
       "artifacts": {
-        "summary": "List authoritative interview artifacts and short-lived download links.",
+        "summary": "Show which interview files are ready and their temporary download links.",
         "positionals": [
           {
             "name": "projectRef",
@@ -581,7 +581,7 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
         "auth": "required"
       },
       "artifact": {
-        "summary": "Print a signed artifact URL or stream that artifact to a local file.",
+        "summary": "Print a temporary download URL or save one interview file.",
         "positionals": [
           {
             "name": "projectRef",
@@ -656,7 +656,7 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
         "auth": "required"
       },
       "media": {
-        "summary": "Inspect short-lived signed links for interview audio and screen media.",
+        "summary": "Show temporary download links for interview audio and screen recordings.",
         "positionals": [
           {
             "name": "projectRef",

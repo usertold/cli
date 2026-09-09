@@ -7,9 +7,9 @@ The complete pre-open-source 1.x package history is preserved in
 
 ### Exact interview artifact downloads
 
-- Added five-minute signed links for authoritative TXT and VTT transcripts, audio, screen recordings, and source events JSONL.
+- Added temporary download links for original TXT and VTT transcripts, audio, screen recordings, and source events JSONL.
 - Added bounded-memory streaming downloads with MIME-correct filenames, expected-size checks, expiry recovery, and atomic completion without overwriting existing files.
-- Updated `transcript --raw`, media, audio, and screen commands to use the shared artifact manifest instead of message reconstruction, authenticated application URLs, or whole-file media buffers.
+- Updated `transcript --raw`, media, audio, and screen commands to download the original files instead of reconstructing transcript text, returning authenticated application URLs, or buffering whole media files.
 
 ## 3.0.1 — 2026-09-08
 
