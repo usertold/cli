@@ -88,6 +88,7 @@ const OPTION_CATALOG: Record<string, OptionMetadata> = {
   "data": { description: "Request body as JSON or @file.", type: 'json' },
   "description": { description: "Description text.", type: 'string' },
   "dismissed": { description: "Show only dismissed records.", type: 'boolean' },
+  "download": { description: "Stream the selected artifact to a local file.", type: 'boolean' },
   "disqualified-message": { description: "Message shown to disqualified participants.", type: 'string' },
   "dry-run": { description: "Preview a command without executing it.", type: 'boolean' },
   "effort": { description: "Effort estimate: xs, s, m, l, or xl.", type: 'enum', values: [...WORK_EFFORT_ESTIMATES] },

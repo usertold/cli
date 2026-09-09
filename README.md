@@ -45,7 +45,13 @@ usertold interview watch int_123 --evidence
 # Inspect the participant record and extracted Evidence
 usertold interview transcript int_123
 usertold interview enriched-timeline int_123
+usertold interview artifacts int_123
 usertold evidence list --interview int_123
+
+# Print one five-minute download URL, or stream the exact artifact to disk
+usertold interview artifact int_123 transcript_text
+usertold interview artifact int_123 transcript_vtt --download
+usertold interview artifact int_123 events --download --output interview-events.jsonl
 
 # Review suggested Findings and their supporting Evidence
 usertold findings list --interview int_123
@@ -77,6 +83,16 @@ usertold evidence list --help --json
 ```
 
 Use `--json` for machine-readable command output and `--dry-run` to inspect supported mutations before sending them.
+
+`interview artifacts` reports availability, MIME type, size, expiry, and a
+five-minute signed URL for each authoritative transcript, recording, and source
+events artifact. `interview artifact <interviewId> <kind> --download` streams one
+of those files to disk without loading it all into memory. Downloads are written
+under a temporary name and become visible at the destination only after the
+transfer and expected-size check complete. Existing files are never overwritten.
+The `interview audio` and `interview screen` shortcuts use the same download path.
+`interview transcript --raw` reads the authoritative stored TXT without message
+reconstruction; use `interview get` when message-level inspection is needed.
 
 ## Public command surface
 

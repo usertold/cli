@@ -49,7 +49,7 @@ research-to-triage loop. The closest CLI paths are:
 | `studies.get_results` | `interview list`, `evidence list`, and `findings list` |
 | `interviews.list` | `interview list` |
 | `interviews.get_context` | `interview get`, `interview transcript`, `interview timeline` |
-| `interviews.get_artifacts` | `interview transcript`, `interview media`, `interview audio`, `interview screen` |
+| `interviews.get_artifacts` | `interview artifacts`, `interview artifact`, `interview transcript --raw`, `interview media`, `interview audio`, `interview screen` |
 | `interviews.processing_status` | `interview status` |
 | `interviews.retry_processing` | `interview reprocess` |
 | `evidence.list` | `evidence list` |
@@ -73,6 +73,13 @@ customer workspace without relying on an undocumented endpoint:
 - GitHub App installation selection, repository selection, health, diagnostics,
   and disconnect; Linear connection status, team selection, and disconnect;
 - billing inspection, account export, bootstrapping, and shell completions.
+
+`interview artifacts` exposes the same five-artifact manifest as MCP: exact TXT
+and VTT transcripts, audio, screen recording, and source events JSONL. Signed
+links expire after five minutes. `interview artifact --download` and the audio
+and screen shortcuts stream directly from artifact storage to an atomic local
+file without forwarding the CLI bearer token. Source event files are transported
+unchanged; the public CLI does not interpret them as a forensic command surface.
 
 GitHub and Linear authorization must pass through the provider's browser consent
 screen. The CLI prints the correct connection URL and can mint a short-lived

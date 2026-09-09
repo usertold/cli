@@ -545,11 +545,68 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
           }
         ],
         "options": [
-          "raw"
+          {
+            "name": "raw",
+            "description": "Print the exact stored transcript bytes without reconstructing messages."
+          }
         ],
         "requiredOptions": [],
         "examples": [
           "usertold interview transcript --help"
+        ],
+        "operation": "read",
+        "auth": "required"
+      },
+      "artifacts": {
+        "summary": "List authoritative interview artifacts and short-lived download links.",
+        "positionals": [
+          {
+            "name": "projectRef",
+            "required": false,
+            "description": "Canonical org/project ref, for example acme/checkout. Falls back to the current project set via `usertold project use`."
+          },
+          {
+            "name": "interviewId",
+            "required": true,
+            "description": "Interview ID."
+          }
+        ],
+        "options": [],
+        "requiredOptions": [],
+        "examples": [
+          "usertold interview artifacts acme/checkout int_123",
+          "usertold interview artifacts acme/checkout int_123 --json"
+        ],
+        "operation": "read",
+        "auth": "required"
+      },
+      "artifact": {
+        "summary": "Print a signed artifact URL or stream that artifact to a local file.",
+        "positionals": [
+          {
+            "name": "projectRef",
+            "required": false,
+            "description": "Canonical org/project ref, for example acme/checkout. Falls back to the current project set via `usertold project use`."
+          },
+          {
+            "name": "interviewId",
+            "required": true,
+            "description": "Interview ID."
+          },
+          {
+            "name": "artifactKind",
+            "required": true,
+            "description": "Artifact kind: transcript_text, transcript_vtt, audio, screen, or events."
+          }
+        ],
+        "options": [
+          "download",
+          "output"
+        ],
+        "requiredOptions": [],
+        "examples": [
+          "usertold interview artifact acme/checkout int_123 transcript_text",
+          "usertold interview artifact acme/checkout int_123 events --download --output interview-events.jsonl"
         ],
         "operation": "read",
         "auth": "required"
@@ -599,7 +656,7 @@ export const COMMAND_REGISTRY: Record<string, RegistryCommand> =
         "auth": "required"
       },
       "media": {
-        "summary": "Download or inspect merged interview media.",
+        "summary": "Inspect short-lived signed links for interview audio and screen media.",
         "positionals": [
           {
             "name": "projectRef",

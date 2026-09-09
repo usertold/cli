@@ -18,6 +18,7 @@ import {
   MediaUploadInitiateRequestSchema,
   MediaUploadPartUrlRequestSchema,
 } from '../media-processing-contract';
+import { InterviewArtifactManifestSchema } from '../schemas/interview-artifacts';
 
 const ApiSessionMediaFullQuerySchema = z.object({
   generation: z.string().regex(/^\d+$/).optional(),
@@ -70,6 +71,12 @@ export const sessionsApiContracts = {
     path: '/api/orgs/:orgHandle/projects/:projectHandle/sessions/import-transcript',
     pathParams: ['orgHandle', 'projectHandle'],
     response: ApiSessionUploadVideoResponseSchema,
+  }),
+  sessionGetArtifacts: defineContract({
+    method: 'GET',
+    path: '/api/orgs/:orgHandle/projects/:projectHandle/sessions/:sessionId/artifacts',
+    pathParams: ['orgHandle', 'projectHandle', 'sessionId'],
+    response: InterviewArtifactManifestSchema,
   }),
   sessionGet: defineContract({
     method: 'GET',

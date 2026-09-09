@@ -1,7 +1,7 @@
-import { open, readFile, stat, writeFile } from 'node:fs/promises';
+import { open, readFile, stat } from 'node:fs/promises';
 import { basename, extname } from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
-import type { ParsedArgs } from '../lib/types';
+import type { CliEnvironment, ParsedArgs } from '../lib/types';
 import {
   assertNoExtraPositionals,
   getBooleanOption,
@@ -12,14 +12,11 @@ import {
 
 import { fail } from '../lib/errors';
 import {
-  requestProjectContractBinary,
   requestProjectContractFormDataJson,
   requestProjectContractJson,
   requestProjectContractText,
 } from '../lib/contract-api';
 import { isJsonOutput, printOutput, remapVocabTopLevelKeys } from '../lib/output';
-import { resolveBaseUrl } from '../lib/config';
-import { buildProjectApiPathFromRef } from '../lib/project-ref';
 import { consumeProjectRef } from '../lib/project-defaults';
 import type { ApiProcessingStatus, ApiSessionDetailResponse, ApiSessionEvent } from '../../shared/api-types';
 import { normalizeSessionProcessingFilter } from '../../shared/processing-status';
@@ -32,9 +29,98 @@ import {
   getImportedMediaKind,
   MAX_IMPORTED_MEDIA_BYTES,
 } from '../../shared/imported-media';
+import {
+  INTERVIEW_ARTIFACT_KINDS,
+  type InterviewArtifact,
+  type InterviewArtifactKind,
+  type InterviewArtifactManifest,
+} from '../../shared/interview-artifacts';
+import {
+  ArtifactDownloadHttpError,
+  artifactLinkIsExpired,
+  downloadArtifactResponse,
+  fetchArtifactResponse,
+  requireAvailableArtifact,
+} from '../lib/artifact-download';
 
-function projectApi(projectRef: string): string {
-  return buildProjectApiPathFromRef(projectRef, '', '<projectRef>');
+function isInterviewArtifactKind(value: string): value is InterviewArtifactKind {
+  return (INTERVIEW_ARTIFACT_KINDS as readonly string[]).includes(value);
+}
+
+async function loadArtifactManifest(
+  env: CliEnvironment,
+  projectRef: string,
+  interviewRef: string,
+): Promise<InterviewArtifactManifest> {
+  return requestProjectContractJson('sessionGetArtifacts', {
+    env,
+    projectRef,
+    pathParams: { sessionId: interviewRef },
+  });
+}
+
+async function loadAvailableArtifact(
+  env: CliEnvironment,
+  projectRef: string,
+  interviewRef: string,
+  kind: InterviewArtifactKind,
+): Promise<InterviewArtifact & { downloadUrl: string }> {
+  let artifact = requireAvailableArtifact(await loadArtifactManifest(env, projectRef, interviewRef), kind);
+  if (artifactLinkIsExpired(artifact)) {
+    artifact = requireAvailableArtifact(await loadArtifactManifest(env, projectRef, interviewRef), kind);
+    if (artifactLinkIsExpired(artifact)) {
+      fail(`Artifact ${kind} download link is already expired. Try again.`);
+    }
+  }
+  return artifact;
+}
+
+async function withArtifactResponse<T>(
+  env: CliEnvironment,
+  projectRef: string,
+  interviewRef: string,
+  kind: InterviewArtifactKind,
+  consume: (artifact: InterviewArtifact & { downloadUrl: string }, response: Response) => Promise<T>,
+): Promise<T> {
+  let artifact = await loadAvailableArtifact(env, projectRef, interviewRef, kind);
+  try {
+    return await consume(artifact, await fetchArtifactResponse(artifact));
+  } catch (error) {
+    if (!(error instanceof ArtifactDownloadHttpError) || error.status !== 403) throw error;
+    artifact = requireAvailableArtifact(await loadArtifactManifest(env, projectRef, interviewRef), kind);
+    return consume(artifact, await fetchArtifactResponse(artifact));
+  }
+}
+
+async function downloadInterviewArtifact(
+  env: CliEnvironment,
+  projectRef: string,
+  interviewRef: string,
+  kind: InterviewArtifactKind,
+  outputPath?: string,
+) {
+  return withArtifactResponse(
+    env,
+    projectRef,
+    interviewRef,
+    kind,
+    async (artifact, response) => ({
+      artifact,
+      result: await downloadArtifactResponse(artifact, response, outputPath),
+    }),
+  );
+}
+
+function printArtifactManifestHuman(manifest: InterviewArtifactManifest): void {
+  console.log(`Interview: ${manifest.interviewRef}`);
+  for (const artifact of manifest.artifacts) {
+    const details: string[] = [artifact.availability];
+    if (artifact.mimeType) details.push(artifact.mimeType);
+    if (artifact.sizeBytes !== null) details.push(`${artifact.sizeBytes} bytes`);
+    console.log(`${artifact.kind}: ${details.join(', ')}`);
+    if (artifact.downloadUrl) console.log(`  ${artifact.downloadUrl}`);
+    if (artifact.expiresAt) console.log(`  expires ${artifact.expiresAt}`);
+  }
 }
 
 function inferRecordingContentType(filePath: string): string {
@@ -273,58 +359,6 @@ function hasChunkBackedAudioMedia(
   detail: Pick<ApiSessionDetailResponse, 'session' | 'audioChunks'>,
 ): boolean {
   return Boolean(detail.session.audio_media_key) || detail.audioChunks.length > 0;
-}
-
-type MediaAvailability = {
-  available: boolean;
-  merged: boolean;
-  chunk_backed: boolean;
-  source: 'none' | 'merged' | 'chunk-backed' | 'merged+chunk-backed';
-};
-
-function describeMediaAvailability(opts: { merged: boolean; chunkBacked: boolean }): MediaAvailability {
-  const { merged, chunkBacked } = opts;
-
-  if (merged && chunkBacked) {
-    return {
-      available: true,
-      merged: true,
-      chunk_backed: true,
-      source: 'merged+chunk-backed',
-    };
-  }
-
-  if (merged) {
-    return {
-      available: true,
-      merged: true,
-      chunk_backed: false,
-      source: 'merged',
-    };
-  }
-
-  if (chunkBacked) {
-    return {
-      available: true,
-      merged: false,
-      chunk_backed: true,
-      source: 'chunk-backed',
-    };
-  }
-
-  return {
-    available: false,
-    merged: false,
-    chunk_backed: false,
-    source: 'none',
-  };
-}
-
-function formatMediaAvailability(availability: MediaAvailability, url: string): string {
-  if (!availability.available) return 'not available';
-  if (availability.source === 'merged') return `${url} (merged)`;
-  if (availability.source === 'chunk-backed') return `${url} (chunk-backed)`;
-  return `${url} (merged + chunk-backed)`;
 }
 
 function fetchSessionDetail(env: string, projectId: string, sessionId: string): Promise<ApiSessionDetailResponse> {
@@ -757,44 +791,54 @@ export async function handleSessionCommand(subcommand: string | undefined, parse
       return;
     }
 
-    // ── Phase 2.2: transcript (R2 first, then fallback) ────────────────────
+    // ── Authoritative transcript ──────────────────────────────────────────
     case 'transcript': {
       const { projectRef: projectId, args } = await consumeProjectRef(parsed, env, { resourceArgCount: 1, commandLabel: 'interview transcript' });
       const sessionId = args[0];
 
       const useRaw = getBooleanOption(parsed, 'raw');
 
-      // Try R2 transcript first (unless --raw)
-      if (!useRaw && !getBooleanOption(parsed, 'json')) {
-        const r2Text = await requestProjectContractText('sessionTranscript', {
+      if (useRaw) {
+        const bytes = await withArtifactResponse(
+          env,
+          projectId,
+          sessionId,
+          'transcript_text',
+          async (_artifact, response) => Buffer.from(await response.arrayBuffer()),
+        );
+        process.stdout.write(bytes);
+        return;
+      }
+
+      // Retain the existing presentation behavior for compatibility. Exact
+      // stored bytes are available through --raw or interview artifact.
+      if (!getBooleanOption(parsed, 'json')) {
+        const transcript = await requestProjectContractText('sessionTranscript', {
           env,
           projectRef: projectId,
           pathParams: { sessionId },
         });
-        if (r2Text !== null) {
-          console.log(r2Text);
+        if (transcript !== null) {
+          console.log(transcript);
           return;
         }
       }
 
-      // Fallback: rebuild from messages
       const data = await requestProjectContractJson('sessionGet', {
         env,
         projectRef: projectId,
         pathParams: { sessionId },
       }) as Record<string, unknown>;
-
       if (getBooleanOption(parsed, 'json')) {
-        const messages = data.messages ?? [];
-        console.log(JSON.stringify(messages, null, 2));
+        console.log(JSON.stringify(data.messages ?? [], null, 2));
       } else {
-        const messages = (data.messages ?? []) as Array<{ role: string; content: string; created_at?: string }>;
+        const messages = (data.messages ?? []) as Array<{ role: string; content: string }>;
         if (messages.length === 0) {
           console.log('No messages in this interview.');
         } else {
-          for (const msg of messages) {
-            const label = msg.role === 'user' ? 'Participant' : msg.role === 'interviewer' ? 'Interviewer' : 'System';
-            console.log(`[${label}] ${msg.content}`);
+          for (const message of messages) {
+            const label = message.role === 'user' ? 'Participant' : message.role === 'interviewer' ? 'Interviewer' : 'System';
+            console.log(`[${label}] ${message.content}`);
           }
         }
       }
@@ -905,41 +949,105 @@ export async function handleSessionCommand(subcommand: string | undefined, parse
       return;
     }
 
-    // ── Phase 1.4: media (absolute URLs) ───────────────────────────────────
+    case 'artifacts': {
+      const { projectRef: projectId, args } = await consumeProjectRef(parsed, env, { resourceArgCount: 1, commandLabel: 'interview artifacts' });
+      const sessionId = args[0];
+      const manifest = await loadArtifactManifest(env, projectId, sessionId);
+      if (isJsonOutput(parsed)) {
+        console.log(JSON.stringify(manifest, null, 2));
+      } else {
+        printArtifactManifestHuman(manifest);
+      }
+      return;
+    }
+
+    case 'artifact': {
+      const { projectRef: projectId, args } = await consumeProjectRef(parsed, env, { resourceArgCount: 2, commandLabel: 'interview artifact' });
+      const [sessionId, rawKind] = args;
+      if (!isInterviewArtifactKind(rawKind)) {
+        fail(`Unsupported artifact kind "${rawKind}". Supported values: ${INTERVIEW_ARTIFACT_KINDS.join(', ')}.`);
+      }
+      const shouldDownload = getBooleanOption(parsed, 'download');
+      const outputPath = parsed.options.output && parsed.options.output !== 'true' ? parsed.options.output : undefined;
+      if (outputPath && !shouldDownload) {
+        fail('--output requires --download.');
+      }
+
+      if (!shouldDownload) {
+        const artifact = await loadAvailableArtifact(env, projectId, sessionId, rawKind);
+        if (getBooleanOption(parsed, 'json') || parsed.options.format === 'json') {
+          console.log(JSON.stringify(artifact, null, 2));
+        } else {
+          console.log(artifact.downloadUrl);
+        }
+        return;
+      }
+
+      const { artifact, result } = await downloadInterviewArtifact(env, projectId, sessionId, rawKind, outputPath);
+      if (isJsonOutput(parsed)) {
+        console.log(JSON.stringify({
+          kind: artifact.kind,
+          mimeType: artifact.mimeType,
+          path: result.path,
+          sizeBytes: result.sizeBytes,
+        }, null, 2));
+      } else {
+        console.log(`Downloaded ${artifact.kind} → ${result.path} (${result.sizeBytes} bytes)`);
+      }
+      return;
+    }
+
+    // ── Media signed URLs ──────────────────────────────────────────────────
     case 'media': {
       const { projectRef: projectId, args } = await consumeProjectRef(parsed, env, { resourceArgCount: 1, commandLabel: 'interview media' });
       const sessionId = args[0];
-
-      const baseUrl = resolveBaseUrl(env);
-
-      const data = await requestProjectContractJson('sessionGet', {
-        env,
-        projectRef: projectId,
-        pathParams: { sessionId },
-      }) as ApiSessionDetailResponse;
-
-      const audioAvailability = describeMediaAvailability({
-        merged: Boolean(data.session.audio_media_key),
-        chunkBacked: data.audioChunks.length > 0,
-      });
-      const screenAvailability = describeMediaAvailability({
-        merged: Boolean(data.session.screen_media_key),
-        chunkBacked: (data.screenManifest?.chunks.length ?? 0) > 0,
-      });
-      const audioUrl = `${baseUrl}${projectApi(projectId)}/sessions/${encodeURIComponent(sessionId)}/media/audio/full`;
-      const screenUrl = `${baseUrl}${projectApi(projectId)}/sessions/${encodeURIComponent(sessionId)}/media/screen/full`;
-
-      const result = {
-        audio: { ...audioAvailability, url: audioAvailability.available ? audioUrl : null },
-        screen: { ...screenAvailability, url: screenAvailability.available ? screenUrl : null },
-      };
+      const [manifest, detail] = await Promise.all([
+        loadArtifactManifest(env, projectId, sessionId),
+        requestProjectContractJson('sessionGet', {
+          env,
+          projectRef: projectId,
+          pathParams: { sessionId },
+        }) as Promise<ApiSessionDetailResponse>,
+      ]);
+      const result = Object.fromEntries(
+        manifest.artifacts
+          .filter(artifact => artifact.kind === 'audio' || artifact.kind === 'screen')
+          .map(artifact => {
+            const merged = artifact.kind === 'audio'
+              ? Boolean(detail.session.audio_media_key)
+              : Boolean(detail.session.screen_media_key);
+            const chunkBacked = artifact.kind === 'audio'
+              ? detail.audioChunks.length > 0
+              : (detail.screenManifest?.chunks.length ?? 0) > 0;
+            const source = merged && chunkBacked
+              ? 'merged+chunk-backed'
+              : merged
+                ? 'merged'
+                : chunkBacked
+                  ? 'chunk-backed'
+                  : artifact.availability === 'available'
+                    ? 'recovered'
+                    : 'none';
+            return [artifact.kind, {
+              ...artifact,
+              available: artifact.availability === 'available',
+              merged,
+              chunk_backed: chunkBacked,
+              source,
+              url: artifact.downloadUrl,
+            }];
+          }),
+      );
 
       if (isJsonOutput(parsed)) {
         console.log(JSON.stringify(result, null, 2));
       } else {
         console.log(`Interview: ${sessionId}`);
-        console.log(`Audio:  ${formatMediaAvailability(audioAvailability, audioUrl)}`);
-        console.log(`Screen: ${formatMediaAvailability(screenAvailability, screenUrl)}`);
+        for (const kind of ['audio', 'screen'] as const) {
+          const artifact = result[kind] as InterviewArtifact | undefined;
+          console.log(`${kind === 'audio' ? 'Audio' : 'Screen'}: ${artifact?.availability ?? 'missing'}`);
+          if (artifact?.downloadUrl) console.log(`  ${artifact.downloadUrl}`);
+        }
       }
       return;
     }
@@ -950,15 +1058,8 @@ export async function handleSessionCommand(subcommand: string | undefined, parse
       const sessionId = args[0];
 
       const outputOpt = parsed.options.output && parsed.options.output !== 'true' ? parsed.options.output : null;
-      const outPath = outputOpt || `${sessionId}-audio.webm`;
-
-      const buffer = await requestProjectContractBinary('sessionMediaAudioFull', {
-        env,
-        projectRef: projectId,
-        pathParams: { sessionId },
-      });
-      await writeFile(outPath, buffer);
-      console.log(`Downloaded audio → ${outPath} (${buffer.byteLength} bytes)`);
+      const { result } = await downloadInterviewArtifact(env, projectId, sessionId, 'audio', outputOpt ?? undefined);
+      console.log(`Downloaded audio → ${result.path} (${result.sizeBytes} bytes)`);
       return;
     }
 
@@ -968,15 +1069,8 @@ export async function handleSessionCommand(subcommand: string | undefined, parse
       const sessionId = args[0];
 
       const outputOpt = parsed.options.output && parsed.options.output !== 'true' ? parsed.options.output : null;
-      const outPath = outputOpt || `${sessionId}-screen.webm`;
-
-      const buffer = await requestProjectContractBinary('sessionMediaScreenFull', {
-        env,
-        projectRef: projectId,
-        pathParams: { sessionId },
-      });
-      await writeFile(outPath, buffer);
-      console.log(`Downloaded screen recording → ${outPath} (${buffer.byteLength} bytes)`);
+      const { result } = await downloadInterviewArtifact(env, projectId, sessionId, 'screen', outputOpt ?? undefined);
+      console.log(`Downloaded screen recording → ${result.path} (${result.sizeBytes} bytes)`);
       return;
     }
 
